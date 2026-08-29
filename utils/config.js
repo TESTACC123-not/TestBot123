@@ -230,9 +230,11 @@ export function loadConfig(baseDir = process.cwd()) {
       absenceLogChannelId: config.channels?.absenceLogChannelId ?? ''
     },
 
-    // Kanal für Fly- / Nametag-Anträge.
+    // Kanäle für Fly- / Nametag-Anträge.
     fly: {
-      channelId: config.fly?.channelId ?? ''
+      channelId: config.fly?.channelId ?? '',
+      // Spezieller Kanal, in den bearbeitete Anträge verschoben werden.
+      doneChannelId: config.fly?.doneChannelId ?? ''
     },
 
     // Kanal für Nametag-Anzeigen.
