@@ -104,9 +104,8 @@ async function handleFlyModal(interaction, runtime) {
   }
 
   const displayName = interaction.fields.getTextInputValue('fly_display_name')?.trim();
-  const reason = interaction.fields.getTextInputValue('fly_reason')?.trim();
 
-  if (!displayName || !reason) {
+  if (!displayName) {
     return replyEphemeral(interaction, 'Bitte fülle alle Felder vollständig aus.');
   }
 
@@ -129,7 +128,7 @@ async function handleFlyModal(interaction, runtime) {
     guildId: runtime.config.guildId,
     userId: interaction.user.id,
     displayName,
-    reason,
+    reason: '',
     robloxName: roblox.roblox_name,
     teamRoleId: teamRole.id,
     rank: teamRole.label ?? null,
