@@ -12,6 +12,7 @@ import { buildActiveAbsencesEmbeds, buildAbsencePanelPayload, buildDutyPanelPayl
 import * as trainerDashboard from './trainerDashboard.js';
 import { logger, sendLog } from './logger.js';
 import { syncWaitingRooms } from './waitingRooms.js';
+import { refreshBewerbungPanel, expireBewerbungRejectRoles } from './bewerbung.js';
 
 async function fetchTextChannel(client, channelId, options = {}) {
   if (!channelId) {
@@ -788,7 +789,8 @@ async function refreshAllPanels(client, runtime) {
     refreshTrainerAssignmentsPanel(client, runtime),
     refreshFlyPanel(client, runtime),
     refreshAbsencePanel(client, runtime),
-    refreshActiveAbsencePanel(client, runtime)
+    refreshActiveAbsencePanel(client, runtime),
+    refreshBewerbungPanel(client, runtime)
   ]);
 }
 
@@ -801,7 +803,8 @@ function startMaintenanceLoop(client, runtime) {
     try {
       await Promise.allSettled([
         syncExpiredAbsences(client, runtime),
-        syncWaitingRooms(client, runtime)
+        syncWaitingRooms(client, runtime),
+        expireBewerbungRejectRoles(client, runtime)
       ]);
     } catch (error) {
       logger.error('Wartungsroutine fehlgeschlagen.', error);
