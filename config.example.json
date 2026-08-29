@@ -82,6 +82,32 @@
     "pingRoleId": ""
   },
 
+  "bewerbung": {
+    "panelChannelId": "KANAL_MIT_BEWERBEN_BUTTON",
+    "resultChannelId": "KANAL_MIT_FERTIGEN_BEWERBUNGEN",
+    "pingRoleId": "ROLLE_DIE_BEI_NEUER_BEWERBUNG_GEPINNT_WIRD",
+    "acceptRoleId": "ROLLE_BEI_ANNAHME",
+    "rejectRoleId": "ROLLE_BEI_ABLEHNUNG_48H",
+    "rejectDurationHours": 48,
+    "reviewerRoleIds": [],
+    "questions": [
+      "Wie heißt du?",
+      "Wie alt bist du?",
+      "Wieso möchtest du ins Team?",
+      "Was bedeutet FRP?",
+      "Was bedeutet RDM?",
+      "Was bedeutet VDM?",
+      "Was bedeutet Metagaming?",
+      "Was bedeutet FearRP?",
+      "Was bedeutet Combat Logging?",
+      "Was bedeutet Powergaming?",
+      "Was ist die New Life Rule?",
+      "Was sind Safezones?",
+      "Wie ist dein IC Name?",
+      "Hast du noch Fragen?"
+    ]
+  },
+
   "serverStatus": {
     "rpChannelId": "",
     "statusChannelId": "",
