@@ -39,7 +39,7 @@ function chunkText(lines, maxLength = 3800, separator = '\n') {
   return chunks.length ? chunks : [''];
 }
 
-function buildTeamListChunks(teamRoles, guild, rows, maxLength = 3400) {
+function buildTeamListChunks(teamRoles, members, rows, maxLength = 3400) {
   const chunks = [];
   let current = '';
   let memberCount = 0;
@@ -60,24 +60,25 @@ function buildTeamListChunks(teamRoles, guild, rows, maxLength = 3400) {
       continue;
     }
 
-    const members = Array.from(
-      guild.members.cache
-        .filter((member) => member.roles.cache.has(teamRole.id))
-        .sort((left, right) => left.displayName.localeCompare(right.displayName))
-        .values()
-    );
+    const memberArray = Array.isArray(members)
+      ? members
+      : Array.from(members.values());
 
-    memberCount += members.length;
+    const roleMembers = memberArray
+      .filter((member) => member.roles.cache.has(teamRole.id))
+      .sort((left, right) => left.displayName.localeCompare(right.displayName));
 
-    pushLine(`### <@&${teamRole.id}> \`•\` ${members.length}`);
+    memberCount += roleMembers.length;
 
-    if (!members.length) {
+    pushLine(`### <@&${teamRole.id}> \`•\` ${roleMembers.length}`);
+
+    if (!roleMembers.length) {
       pushLine('*Keine Inhaber*');
       continue;
     }
 
-    const padWidth = String(members.length).length;
-    members.forEach((member, index) => {
+    const padWidth = String(roleMembers.length).length;
+    roleMembers.forEach((member, index) => {
       const roblox = rows.get(member.id)?.roblox_name;
       const number = String(index + 1).padStart(Math.max(padWidth, 2), '0');
       const robloxLabel = roblox ? `\`${roblox}\`` : '*kein Roblox-Name*';
@@ -85,7 +86,7 @@ function buildTeamListChunks(teamRoles, guild, rows, maxLength = 3400) {
 
       const brokeChunk = pushLine(line);
       if (brokeChunk) {
-        current = `### <@&${teamRole.id}> \`•\` ${members.length} *(Fortsetzung)*\n${current}`;
+        current = `### <@&${teamRole.id}> \`•\` ${roleMembers.length} *(Fortsetzung)*\n${current}`;
       }
     });
   }
@@ -398,7 +399,7 @@ export function buildAbsencePanelPayload() {
 }
 
 
-export function buildTeamListEmbeds({ guild, config, rows }) {
+export function buildTeamListEmbeds({ guild, config, rows, members }) {
   const teamRoles = config.roles.teamRoles.filter((teamRole) => teamRole?.id);
   const timestamp = new Date().toLocaleString('de-DE');
 
@@ -415,7 +416,7 @@ export function buildTeamListEmbeds({ guild, config, rows }) {
     return [{ flags: MessageFlags.IsComponentsV2, components: [container] }];
   }
 
-  const { chunks, memberCount } = buildTeamListChunks(teamRoles, guild, rows);
+  const { chunks, memberCount } = buildTeamListChunks(teamRoles, members, rows);
   const totalParts = chunks.length;
 
   return chunks.map((chunk, index) => {
