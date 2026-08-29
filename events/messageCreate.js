@@ -10,6 +10,17 @@ export default {
       return;
     }
 
+    // Konsolen-Log für JEDE eingehende Nachricht – hilft zu sehen, was der Bot
+    // empfängt (Kanal, Autor, Inhalt, Systeme wie Waffenschein/Fraktions-Ticket).
+    const channelLabel = message.channel?.isDMBased?.()
+      ? 'DM'
+      : `#${message.channel?.name || message.channelId}`;
+    const contentPreview = String(message.content || '').replace(/\s+/g, ' ').trim();
+    logger.info(
+      `[MSG] ${channelLabel} | ${message.author.tag} (${message.author.id})` +
+        (contentPreview ? ` | "${contentPreview.slice(0, 300)}"` : ' | (ohne Text)')
+    );
+
     // Bewerbungs-Dialog per DM: Antworten auf die gestellten Fragen erfassen.
     if (message.channel?.isDMBased?.()) {
       const handled = await handleBewerbungDmMessage(message, runtime).catch((error) => {
