@@ -233,13 +233,16 @@ export function loadConfig(baseDir = process.cwd()) {
 
     // ------------------------------------------------------------------------
     //  IC-COUNTER  (Spielerzahl-Meldung für den Server-Status).
+    //  Falls kein eigener "icCounter"-Block existiert, werden die Kanäle und
+    //  die Ping-Rolle automatisch aus "serverStatus" übernommen – so muss der
+    //  Nutzer die Kanäle nicht doppelt eintragen.
     // ------------------------------------------------------------------------
     icCounter: {
-      statusChannelId: config.icCounter?.statusChannelId ?? '',
-      messageChannelId: config.icCounter?.messageChannelId ?? '',
-      pingRoleId: config.icCounter?.pingRoleId ?? '',
-      intervalMinutes: Math.max(1, Number(config.icCounter?.intervalMinutes) || 5),
-      playerCap: Math.max(1, Number(config.icCounter?.playerCap) || 50),
+      statusChannelId: config.icCounter?.statusChannelId ?? config.serverStatus?.statusChannelId ?? '',
+      messageChannelId: config.icCounter?.messageChannelId ?? config.serverStatus?.messageChannelId ?? '',
+      pingRoleId: config.icCounter?.pingRoleId ?? config.serverStatus?.pingRoleId ?? '',
+      intervalMinutes: Math.max(1, Number(config.icCounter?.intervalMinutes) || Number(config.serverStatus?.pingIntervalMinutes) || 5),
+      playerCap: Math.max(1, Number(config.icCounter?.playerCap) || Number(config.serverStatus?.playerCap) || 50),
       pushThreshold: Math.max(1, Number(config.icCounter?.pushThreshold) || 40),
       offlineThreshold: Math.max(0, Number(config.icCounter?.offlineThreshold) || 5)
     },
