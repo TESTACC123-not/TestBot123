@@ -79,19 +79,23 @@ function normalizeArray(value) {
 }
 
 // Wandelt die Team-Ping-Buttons in ein sauberes Array um.
-// Unterstützt einfache Strings "ROLLE_ID" und Objekte { label, emoji, roleId }.
+// Unterstützt einfache Strings "ROLLE_ID" und Objekte { label, emoji, roleId, waitingRoomType }.
+// waitingRoomType verknüpft den Button mit einem Dienst-Bereich (z. B. "highTeam" oder "leitung")
+// aus duty.areas, damit der Benutzer beim Aktivieren in dessen Warteraum verschoben
+// und beim Deaktivieren aus dem Call gekickt wird (wie im Support-/Wartebereich-System).
 function normalizeTeamPings(pings = []) {
   return pings
     .filter(Boolean)
     .map((ping, index) => {
       if (typeof ping === 'string') {
-        return { label: `Ping ${index + 1}`, emoji: '', roleId: ping };
+        return { label: `Ping ${index + 1}`, emoji: '', roleId: ping, waitingRoomType: '' };
       }
 
       return {
         label: String(ping.label ?? ping.name ?? `Ping ${index + 1}`).trim(),
         emoji: String(ping.emoji ?? '').trim(),
-        roleId: String(ping.roleId ?? '').trim()
+        roleId: String(ping.roleId ?? '').trim(),
+        waitingRoomType: String(ping.waitingRoomType ?? '').trim()
       };
     })
     .filter((ping) => ping.roleId);
