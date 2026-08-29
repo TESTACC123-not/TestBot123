@@ -76,17 +76,8 @@ function buildFlyModal() {
     .setRequired(true)
     .setPlaceholder('Wie soll der Name angezeigt werden?');
 
-  const reason = new TextInputBuilder()
-    .setCustomId('fly_reason')
-    .setLabel('Begründung')
-    .setStyle(TextInputStyle.Paragraph)
-    .setRequired(true)
-    .setMaxLength(700)
-    .setPlaceholder('Warum wird der Antrag benötigt?');
-
   modal.addComponents(
-    new ActionRowBuilder().addComponents(displayName),
-    new ActionRowBuilder().addComponents(reason)
+    new ActionRowBuilder().addComponents(displayName)
   );
 
   return modal;
