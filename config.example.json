@@ -98,7 +98,7 @@
 
   "teamUpdate": {
     "channelId": "",
-    "warnPingRoleId": "",
+    "teamPingRoleId": "",
     "warnRoleIds": []
   },
 
