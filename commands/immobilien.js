@@ -3,6 +3,7 @@ import {
   PermissionFlagsBits,
   SlashCommandBuilder
 } from 'discord.js';
+import path from 'node:path';
 import {
   buildRealEstateEmbed,
   DEFAULT_REAL_ESTATES,
@@ -46,7 +47,8 @@ async function publishList(interaction, runtime) {
 
   ensureDefaults(runtime);
   const rows = runtime.db.listRealEstates(runtime.config.guildId);
-  const payload = buildRealEstateEmbed(rows);
+  const imageFilePath = path.join(runtime.rootDir, 'assets', 'immobilien-karte.png');
+  const payload = buildRealEstateEmbed(rows, { imageFilePath });
 
   const messages = await channel.messages.fetch({ limit: 10 });
   const botMessage = messages.find((msg) => msg.author.id === interaction.client.user.id);
