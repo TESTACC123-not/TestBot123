@@ -1,0 +1,136 @@
+{
+  "guildId": "DEINE_SERVER_ID",
+  "token": "",
+
+  "duty": {
+    "panelChannelId": "DEINE_DUTY_PANEL_KANAL_ID",
+    "areas": {
+      "support": {
+        "label": "Support",
+        "roleId": "SUPPORT_DIENSTROLLE",
+        "caseChannelId": "SUPPORT_ANFRAGEN_KANAL",
+        "waitingChannelId": "SUPPORT_WARTERAUM_VOICE",
+        "activeChannelId": "SUPPORT_BEARBEITUNG_VOICE",
+        "finishedChannelId": "SUPPORT_ERLEDIGT_VOICE",
+        "handlerRoleIds": [],
+        "pingRoleIds": []
+      },
+      "highTeam": {
+        "label": "High Team",
+        "roleId": "HIGHTEAM_DIENSTROLLE",
+        "caseChannelId": "HIGHTEAM_ANFRAGEN_KANAL",
+        "waitingChannelId": "HIGHTEAM_WARTERAUM_VOICE",
+        "activeChannelId": "HIGHTEAM_BEARBEITUNG_VOICE",
+        "finishedChannelId": "HIGHTEAM_ERLEDIGT_VOICE",
+        "handlerRoleIds": [],
+        "pingRoleIds": []
+      },
+      "leitung": {
+        "label": "Leitung",
+        "roleId": "LEITUNG_DIENSTROLLE",
+        "caseChannelId": "LEITUNG_ANFRAGEN_KANAL",
+        "waitingChannelId": "LEITUNG_WARTERAUM_VOICE",
+        "activeChannelId": "LEITUNG_BEARBEITUNG_VOICE",
+        "finishedChannelId": "LEITUNG_ERLEDIGT_VOICE",
+        "handlerRoleIds": [],
+        "pingRoleIds": []
+      }
+    }
+  },
+
+  "roles": {
+    "onDutyRoleId": "",
+    "unverifyRoleId": "",
+    "citizenRoleId": "",
+    "absenceRoleId": "",
+    "trainerRoleId": "",
+    "trainerTargetRoleId": "",
+    "supporterRoleIds": [],
+    "flyReviewerRoleIds": [],
+    "teamRoles": []
+  },
+
+  "channels": {
+    "supportChannelId": "",
+    "supportLogChannelId": "",
+    "supportLeaderboardChannelId": "",
+    "dutyLogChannelId": "",
+    "verifyPanelChannelId": "",
+    "welcomeChannelId": "DEIN_WILLKOMMEN_KANAL",
+    "goodbyeChannelId": "DEIN_BYE_KANAL",
+    "teamListChannelId": "DEIN_TEAMLISTE_KANAL",
+    "absencePanelChannelId": "",
+    "activeAbsencesChannelId": "",
+    "absenceLogChannelId": ""
+  },
+
+  "categories": {
+    "teamCategoryId": ""
+  },
+
+  "fly": {
+    "channelId": ""
+  },
+
+  "nametag": {
+    "channelId": ""
+  },
+
+  "hausTicket": {
+    "panelChannelId": "",
+    "categoryId": "",
+    "pingRoleId": ""
+  },
+
+  "serverStatus": {
+    "rpChannelId": "",
+    "statusChannelId": "",
+    "pingRoleId": "",
+    "pushChannelId": "",
+    "staffRoleId": "",
+    "statusRoleId": "",
+    "leaderboardChannelId": "",
+    "rpStopThreshold": 10,
+    "rpStartThreshold": 30,
+    "pingIntervalMinutes": 5,
+    "playerCap": 50
+  },
+
+  "teamUpdate": {
+    "channelId": "",
+    "warnPingRoleId": "",
+    "warnRoleIds": []
+  },
+
+  "verify": {
+    "questions": [
+      {
+        "id": "q1",
+        "question": "Wie heißt du im Spiel?",
+        "answers": []
+      },
+      {
+        "id": "q2",
+        "question": "Wie hast du den Server gefunden?",
+        "answers": []
+      }
+    ]
+  },
+
+  "panels": {
+    "supportLeaderboard": { "channelId": "", "messageId": "" },
+    "onDuty": { "channelId": "", "messageId": "" },
+    "verify": { "channelId": "", "messageId": "" },
+    "teamList": { "channelId": "", "messageId": "" },
+    "trainerDashboard": { "channelId": "", "messageId": "" },
+    "trainerAssignments": { "channelId": "", "messageId": "" },
+    "realEstate": { "channelId": "", "messageId": "" },
+    "fly": { "channelId": "", "messageId": "" },
+    "absence": { "channelId": "", "messageId": "" },
+    "activeAbsences": { "channelId": "", "messageId": "" }
+  },
+
+  "support": {
+    "supporterRoleIds": []
+  }
+}
