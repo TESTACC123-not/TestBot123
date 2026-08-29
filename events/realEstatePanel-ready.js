@@ -5,6 +5,7 @@ import { Events } from 'discord.js';
 import { buildRealEstateEmbed, DEFAULT_REAL_ESTATES } from '../utils/realEstate.js';
 import { sendOrEditPanelMessage } from '../utils/panelMessage.js';
 import { logger } from '../utils/logger.js';
+import path from 'node:path';
 
 export default {
   name: Events.ClientReady,
@@ -41,7 +42,8 @@ export default {
       );
       const rows = runtime.db.listRealEstates(runtime.config.guildId);
 
-      await sendOrEditPanelMessage(channel, client, buildRealEstateEmbed(rows), { label: 'Immobilienliste' });
+      const imageFilePath = path.join(runtime.rootDir, 'assets', 'immobilien-karte.png');
+      await sendOrEditPanelMessage(channel, client, buildRealEstateEmbed(rows, { imageFilePath }), { label: 'Immobilienliste' });
     } catch (error) {
       logger.error('Fehler beim Verwalten der Immobilienliste.', error);
     }
