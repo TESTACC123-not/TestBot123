@@ -108,6 +108,16 @@
     ]
   },
 
+  "icCounter": {
+    "statusChannelId": "KANAL_FUER_STATUS_MELDUNG",
+    "messageChannelId": "KANAL_WO_IC_SPIELER_EINGEGEBEN_WERDEN",
+    "pingRoleId": "TEAM_ROLLE_DIE_GEPINGT_WIRD",
+    "intervalMinutes": 5,
+    "playerCap": 50,
+    "pushThreshold": 40,
+    "offlineThreshold": 5
+  },
+
   "serverStatus": {
     "rpChannelId": "",
     "statusChannelId": "",
