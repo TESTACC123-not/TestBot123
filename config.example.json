@@ -70,7 +70,8 @@
   },
 
   "fly": {
-    "channelId": ""
+    "channelId": "",
+    "doneChannelId": ""
   },
 
   "nametag": {
