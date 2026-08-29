@@ -307,6 +307,30 @@ async function upsertMultiPartPanelMessages(client, runtime, panelKey, channelId
 
   runtime.db.setSetting(`panelParts:${panelKey}`, String(parts.length));
 
+  // Verwaiste Panel-Nachrichten im Kanal aufräumen (z. B. nach Server-Reinstall,
+  // wenn die Datenbank mit den Nachrichten-IDs verloren ging und alte doppelte
+  // Blöcke übrig geblieben sind). Nur echte Bot-Nachrichten dieses Panels werden
+  // entfernt; die gerade verwalteten Nachrichten bleiben stehen.
+  if (sentMessages.length) {
+    const channel = await fetchTextChannel(client, channelId);
+    if (channel) {
+      const sentIds = new Set(sentMessages.map((m) => m.id));
+      const recent = await channel.messages.fetch({ limit: 50 }).catch(() => new Map());
+      for (const message of recent.values()) {
+        if (sentIds.has(message.id)) {
+          continue;
+        }
+        if (!message.author || message.author.id !== client.user?.id) {
+          continue;
+        }
+        const text = `${message.content ?? ''} ${message.embeds?.map((e) => e.description ?? '').join(' ')}`;
+        if (text.includes('Teamliste')) {
+          await message.delete().catch(() => null);
+        }
+      }
+    }
+  }
+
   return sentMessages;
 }
 
