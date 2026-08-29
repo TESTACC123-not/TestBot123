@@ -1,5 +1,6 @@
 import { ActionRowBuilder, ModalBuilder, MessageFlags, PermissionFlagsBits, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { buildFlyRequestPayload, buildSupportCaseChannelMessage } from '../utils/renderers.js';
+import { isTeamPingAllowed, triggerTeamPing } from '../utils/teamPings.js';
 import * as trainerDashboard from '../utils/trainerDashboard.js';
 import {
   refreshActiveAbsencePanel,
@@ -471,6 +472,19 @@ async function handleServerPushRoleToggle(interaction, runtime) {
   }
 }
 
+async function handleTeamPing(interaction, runtime, roleId) {
+  if (!isTeamPingAllowed(interaction.member, runtime)) {
+    return replyEphemeral(interaction, 'Du bist nicht berechtigt, Team-Pings zu senden.');
+  }
+
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+  const error = await triggerTeamPing(interaction, runtime, roleId);
+  return interaction.editReply({
+    content: error ? `❌ ${error}` : '✅ Team-Ping wurde gesendet.'
+  }).catch(() => null);
+}
+
 const handlers = [
   {
     name: 'support_take',
@@ -561,6 +575,12 @@ const handlers = [
     name: 'bewerbung_start',
     match: (customId) => customId === 'bewerbung_start',
     execute: (interaction, runtime) => startBewerbung(interaction, runtime)
+  },
+  {
+    name: 'teamping',
+    match: (customId) => customId.startsWith('teamping:'),
+    execute: (interaction, runtime) =>
+      handleTeamPing(interaction, runtime, interaction.customId.split(':')[1])
   },
   {
     name: 'bewerbung_accept',
