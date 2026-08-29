@@ -119,8 +119,10 @@ function chunkRealEstateRows(rows, size = 12) {
   return chunks;
 }
 
-// Funktion um die Liste als Discord Embed(s) zu formatieren (im alten Design)
-export function buildRealEstateEmbed(rows = null) {
+// Funktion um die Liste als Discord Embed(s) zu formatieren.
+// Optional kann ein lokales Bild als Anhang mitgegeben werden (imageFilePath),
+// das als Kopf-Bild des ersten Embeds angezeigt wird.
+export function buildRealEstateEmbed(rows = null, { imageFilePath = null } = {}) {
   const source = Array.isArray(rows) && rows.length
     ? orderRowsByCanonicalList(rows).map((row) => ({
         id: row.property_id ?? row.id,
@@ -146,27 +148,34 @@ export function buildRealEstateEmbed(rows = null) {
   const sold = countByStatus[REAL_ESTATE_STATUS.sold] ?? 0;
   const unavailable = countByStatus[REAL_ESTATE_STATUS.unavailable] ?? 0;
 
-  return {
-    embeds: chunks.map((chunk, index) => {
-      const firstId = chunk[0]?.id ?? 1;
-      const lastId = chunk[chunk.length - 1]?.id ?? firstId;
+  const files = imageFilePath
+    ? [{ attachment: imageFilePath, name: 'immobilien-karte.png' }]
+    : [];
 
-      return {
-        color: 0x2ecc71,
-        title: index === 0 ? 'Immobilienliste | München RP' : `Immobilienliste | Häuser ${firstId}-${lastId}`,
-        description: [
-          index === 0 ? 'Hier findest du alle Immobilien, Preise und den aktuellen Status der Häuser.' : null,
-          index === 0 ? '🟢 Verfügbar · 🟠 Reserviert · 🔴 Verkauft · ⚫ Nicht verfügbar' : null,
-          `**Häuser ${firstId}-${lastId}**`,
-          chunk.map(renderRealEstateLine).join('\n\n')
-        ].filter(Boolean).join('\n\n'),
-        footer: {
-          text: index === 0
-            ? `Immobilienliste | ${total} Häuser · ${free} frei · ${reserved} reserviert · ${sold} verkauft · ${unavailable} nicht verfügbar`
-            : 'Immobilienliste | Automatische Aktualisierung aktiv'
-        },
-        timestamp: new Date().toISOString()
-      };
-    })
-  };
+  const embeds = chunks.map((chunk, index) => {
+    const firstId = chunk[0]?.id ?? 1;
+    const lastId = chunk[chunk.length - 1]?.id ?? firstId;
+
+    return {
+      color: 0x2ecc71,
+      title: index === 0 ? '🏘️ Immobilienliste | Echo RP' : `🏘️ Immobilienliste | Häuser ${firstId}-${lastId}`,
+      description: [
+        index === 0 ? '**Echo RP** · Hier findest du alle Immobilien, Preise und den aktuellen Status der Häuser.' : null,
+        index === 0 ? '🟢 Verfügbar · 🟠 Reserviert · 🔴 Verkauft · ⚫ Nicht verfügbar' : null,
+        `**Häuser ${firstId}-${lastId}**`,
+        chunk.map(renderRealEstateLine).join('\n\n')
+      ].filter(Boolean).join('\n\n'),
+      image: index === 0 && files.length
+        ? { url: 'attachment://immobilien-karte.png' }
+        : undefined,
+      footer: {
+        text: index === 0
+          ? `Echo RP | ${total} Häuser · ${free} frei · ${reserved} reserviert · ${sold} verkauft · ${unavailable} nicht verfügbar`
+          : 'Echo RP | Automatische Aktualisierung aktiv'
+      },
+      timestamp: new Date().toISOString()
+    };
+  });
+
+  return { embeds, files };
 }
