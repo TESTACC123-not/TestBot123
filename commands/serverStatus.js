@@ -4,7 +4,7 @@ import {
   SlashCommandBuilder
 } from 'discord.js';
 import { startIcCounterLoop } from '../utils/icCounter.js';
-import { setRpState, getRpState } from '../utils/serverStatus.js';
+import { setRpState, getRpState, sendServerPushAnnouncement } from '../utils/serverStatus.js';
 import { publishStatusLeaderboard } from '../utils/statusLeaderboard.js';
 
 const RP_STATE_LABEL = {
@@ -20,7 +20,7 @@ export default {
     .setDMPermission(false)
     .addSubcommand((subcommand) => subcommand
       .setName('start')
-      .setDescription('Startet den Server-Status-Ping für den Tag (jeden Morgen ausführen).')
+      .setDescription('Startet Status-Ping + postet die Server-Push-Ankündigung.')
     )
     .addSubcommand((subcommand) => subcommand
       .setName('rp')
@@ -49,14 +49,28 @@ export default {
       // Neuer Tag beginnt -> RP-Modus auf "live" setzen und Ping-Schleife neu starten.
       setRpState(runtime.db, runtime.config.guildId, 'live');
 
+      let pushInfo = '';
+      try {
+        const push = await sendServerPushAnnouncement(interaction.client, runtime);
+        if (push?.ok) {
+          pushInfo = `\n📣 ${push.content}`;
+        } else {
+          pushInfo = `\n⚠️ Server-Push wurde übersprungen: ${push?.content ?? 'pushChannelId nicht konfiguriert'}`;
+        }
+      } catch (error) {
+        pushInfo = '\n⚠️ Server-Push-Ankündigung konnte nicht gepostet werden.';
+      }
+
       try {
         await startIcCounterLoop(interaction.client, runtime);
       } catch (error) {
-        return interaction.editReply({ content: '❌ Der Server-Status-Ping konnte nicht gestartet werden. Bitte Logs prüfen.' });
+        return interaction.editReply({
+          content: `❌ Der Server-Status-Ping konnte nicht gestartet werden. Bitte Logs prüfen.${pushInfo}`
+        });
       }
 
       return interaction.editReply({
-        content: `✅ Server-Status-Ping wurde gestartet (5-Minuten-Takt). RP-Modus aktiviert: ${RP_STATE_LABEL.live}.`
+        content: `✅ Server-Status-Ping wurde gestartet (5-Minuten-Takt). RP-Modus aktiviert: ${RP_STATE_LABEL.live}.${pushInfo}`
       });
     }
 
