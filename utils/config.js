@@ -96,6 +96,29 @@ function normalizeStringList(value) {
   return [];
 }
 
+// Wandelt die Waffenschein-Stufen in ein Objekt { a: {label, description, price}, ... } um.
+// Akzeptiert ein Objekt { a: "Waffenschein A", ... } oder { a: {label, description, price}, ... }.
+function normalizeWaffenscheinTypes(value) {
+  if (!value || typeof value !== 'object') {
+    return {};
+  }
+
+  const result = {};
+  for (const [key, entry] of Object.entries(value)) {
+    const k = String(key).toLowerCase();
+    if (typeof entry === 'string') {
+      result[k] = { label: entry.trim(), description: '', price: '' };
+    } else if (entry && typeof entry === 'object') {
+      result[k] = {
+        label: String(entry.label ?? entry.name ?? k).trim(),
+        description: String(entry.description ?? '').trim(),
+        price: String(entry.price ?? '').trim()
+      };
+    }
+  }
+  return result;
+}
+
 export function loadConfig(baseDir = process.cwd()) {
   const configPath = path.join(baseDir, 'config.json');
   const config = readJson(configPath, {});
@@ -301,6 +324,34 @@ export function loadConfig(baseDir = process.cwd()) {
       panelChannelId: config.hausTicket?.panelChannelId ?? '',
       categoryId: config.hausTicket?.categoryId ?? '',
       pingRoleId: config.hausTicket?.pingRoleId ?? ''
+    },
+
+    // Waffenschein-Ticket-System (Panel, Stufen A/B/C, Ticket, Annehmen/Ablehnen, Rolle + DM).
+    waffenschein: {
+      // Kanal, in dem das Waffenschein-Panel liegt.
+      panelChannelId: config.waffenschein?.panelChannelId ?? '',
+      // Kategorie, in der Waffenschein-Tickets erstellt werden.
+      categoryId: config.waffenschein?.categoryId ?? '',
+      // Rolle, die bei einem neuen Ticket gepinnt wird (Team).
+      pingRoleId: config.waffenschein?.pingRoleId ?? '',
+      // Rolle, die bei Annahme an den Antragsteller vergeben wird.
+      acceptRoleId: config.waffenschein?.acceptRoleId ?? '',
+      // Bank-Konto, an das überwiesen werden muss (Hinweis im Ticket).
+      bankAccount: config.waffenschein?.bankAccount ?? 'Guar443344',
+      // Waffenschein-Stufen (a/b/c). Jede mit label/description/price.
+      types: normalizeWaffenscheinTypes(config.waffenschein?.types)
+    },
+
+    // Fraktions-Tickets-System (Panel + Anfrage-Ticket, ohne Rollenvergabe).
+    fraktionsTickets: {
+      // Kanal, in dem das Fraktions-Tickets-Panel liegt.
+      panelChannelId: config.fraktionsTickets?.panelChannelId ?? '',
+      // Kategorie, in der Fraktions-Tickets erstellt werden.
+      categoryId: config.fraktionsTickets?.categoryId ?? '',
+      // Rolle, die bei einem neuen Ticket gepinnt wird (Team).
+      pingRoleId: config.fraktionsTickets?.pingRoleId ?? '',
+      // Titel des Tickets (optional).
+      title: config.fraktionsTickets?.title ?? 'Fraktions-Anfrage'
     },
 
     // Bewerbungssystem (Antrag per DM, Ergebnis-Kanal, Annehmen/Ablehnen).
