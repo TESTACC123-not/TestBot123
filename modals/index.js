@@ -132,14 +132,15 @@ async function handleFlyModal(interaction, runtime) {
     reason,
     robloxName: roblox.roblox_name,
     teamRoleId: teamRole.id,
+    rank: teamRole.label ?? null,
     nametag,
     createdAt: Date.now(),
     status: 'open',
-    messageChannelId: runtime.config.fly.channelId,
+    messageChannelId: runtime.config.fly.requestChannelId || runtime.config.fly.channelId,
     messageId: null
   };
 
-  const targetChannel = await interaction.guild.channels.fetch(runtime.config.fly.channelId).catch(() => null);
+  const targetChannel = await interaction.guild.channels.fetch(runtime.config.fly.requestChannelId || runtime.config.fly.channelId).catch(() => null);
   if (!targetChannel?.isTextBased()) {
     return replyEphemeral(interaction, 'Der Antrags-Kanal ist nicht korrekt konfiguriert.');
   }
@@ -155,6 +156,7 @@ async function handleFlyModal(interaction, runtime) {
       reason: record.reason,
       roblox_name: record.robloxName,
       team_role_id: record.teamRoleId,
+      rank: record.rank,
       nametag: record.nametag,
       created_at: record.createdAt,
       status: record.status,
