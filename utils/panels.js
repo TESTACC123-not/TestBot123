@@ -395,8 +395,12 @@ async function refreshTeamListPanel(client, runtime) {
     return null;
   }
 
-  await guild.members.fetch().catch(() => null);
+  const fetchedMembers = await guild.members.fetch().catch(() => null);
   await guild.channels.fetch().catch(() => null);
+
+  const members = fetchedMembers && fetchedMembers.size
+    ? Array.from(fetchedMembers.values())
+    : Array.from(guild.members.cache.values());
 
   const stored = runtime.db.getPanelMessage('teamList#0');
   const configuredPanel = runtime.config.panels.teamList ?? {};
@@ -445,7 +449,7 @@ async function refreshTeamListPanel(client, runtime) {
 
   const rows = new Map(runtime.db.listRobloxNames(runtime.config.guildId).map((row) => [row.user_id, row]));
 
-  const payloads = buildTeamListEmbeds({ guild, config: runtime.config, rows });
+  const payloads = buildTeamListEmbeds({ guild, config: runtime.config, rows, members });
   return upsertMultiPartPanelMessages(
     client,
     runtime,
