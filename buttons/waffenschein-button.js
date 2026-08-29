@@ -38,7 +38,7 @@ async function handleOpen(interaction, runtime) {
   }
 
   const { buildWaffenscheinTypeSelectPayload } = await import('../utils/waffenschein.js');
-  return interaction.reply(buildWaffenscheinTypeSelectPayload());
+  return interaction.reply(buildWaffenscheinTypeSelectPayload(runtime.config));
 }
 
 /* Im Ticket: annehmen -> Rolle + DM */
@@ -55,12 +55,14 @@ async function handleAccept(interaction, runtime) {
   }
 
   const config = runtime.config.waffenschein || {};
-  const acceptRoleId = config.acceptRoleId;
   const type = getWaffenscheinType(runtime.config, parsed.typeKey);
   const bankAccount = config.bankAccount || 'Guar443344';
 
+  // Rolle der gewählten Stufe, Fallback auf acceptRoleId (falls nicht pro Stufe gesetzt).
+  const acceptRoleId = type?.roleId || config.acceptRoleId;
+
   if (!acceptRoleId) {
-    return replyEphemeral(interaction, 'Es ist keine Annahme-Rolle konfiguriert (waffenschein.acceptRoleId).');
+    return replyEphemeral(interaction, `Es ist keine Rolle für „${type?.label ?? parsed.typeKey}“ konfiguriert (waffenschein.types.${parsed.typeKey}.roleId).`);
   }
 
   const member = await interaction.guild.members.fetch(parsed.ownerId).catch(() => null);
