@@ -1,5 +1,6 @@
 import { logger } from '../utils/logger.js';
 import { refreshTeamListPanel } from '../utils/panels.js';
+import { handleBewerbungDmMessage } from '../utils/bewerbung.js';
 
 export default {
   name: 'messageCreate',
@@ -7,6 +8,17 @@ export default {
   async execute(message, runtime) {
     if (message.author.bot) {
       return;
+    }
+
+    // Bewerbungs-Dialog per DM: Antworten auf die gestellten Fragen erfassen.
+    if (message.channel?.isDMBased?.()) {
+      const handled = await handleBewerbungDmMessage(message, runtime).catch((error) => {
+        logger.error('Bewerbungs-DM konnte nicht verarbeitet werden.', error);
+        return false;
+      });
+      if (handled) {
+        return;
+      }
     }
 
     if (!runtime.config.nametag.channelId) {
