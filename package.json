@@ -1,0 +1,19 @@
+{
+  "name": "muenchen-rp-vc-bot",
+  "version": "1.0.0",
+  "description": "Professionell strukturierter Discord-Bot für München RP | VC",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node index.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "better-sqlite3": "^13.0.1",
+    "discord.js": "^14.27.0",
+    "dotenv": "^17.4.2"
+  }
+}
