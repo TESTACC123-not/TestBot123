@@ -107,12 +107,13 @@ function normalizeWaffenscheinTypes(value) {
   for (const [key, entry] of Object.entries(value)) {
     const k = String(key).toLowerCase();
     if (typeof entry === 'string') {
-      result[k] = { label: entry.trim(), description: '', price: '' };
+      result[k] = { label: entry.trim(), description: '', price: '', roleId: '' };
     } else if (entry && typeof entry === 'object') {
       result[k] = {
         label: String(entry.label ?? entry.name ?? k).trim(),
         description: String(entry.description ?? '').trim(),
-        price: String(entry.price ?? '').trim()
+        price: String(entry.price ?? '').trim(),
+        roleId: String(entry.roleId ?? '').trim()
       };
     }
   }
