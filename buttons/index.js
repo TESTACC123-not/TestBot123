@@ -379,30 +379,52 @@ async function handleFlyReviewed(interaction, runtime, requestId) {
   }
 
   const updated = runtime.db.getFlyRequest(requestId, runtime.config.guildId);
-  const channel = await interaction.guild.channels.fetch(updated.message_channel_id || runtime.config.fly.channelId).catch(() => null);
-  if (channel?.isTextBased()) {
-    const message = updated.message_id
-      ? await channel.messages.fetch(updated.message_id).catch(() => null)
-      : null;
-    const payload = buildFlyRequestPayload({
-      pingRoleId: runtime.config.roles.onDutyRoleId,
-      requestRecord: updated,
-      reviewerName: `<@${interaction.user.id}>`,
-      reviewedAt: updated.reviewed_at,
-      processingDuration: updated.reviewed_at - updated.created_at
-    });
+  const sourceChannel = await interaction.guild.channels.fetch(updated.message_channel_id || runtime.config.fly.channelId).catch(() => null);
+  // Bearbeitete Anträge werden in den speziellen Done-Kanal verschoben.
+  const doneChannel = runtime.config.fly.doneChannelId
+    ? await interaction.guild.channels.fetch(runtime.config.fly.doneChannelId).catch(() => null)
+    : null;
 
+  const payload = buildFlyRequestPayload({
+    // Ping statt der generischen On-Duty-Rolle: die Teamrolle des Antrags (Rolle für den Anzeigenamen).
+    pingRoleId: updated.team_role_id || runtime.config.roles.onDutyRoleId,
+    requestRecord: updated,
+    reviewerName: `<@${interaction.user.id}>`,
+    reviewedAt: updated.reviewed_at,
+    processingDuration: updated.reviewed_at - updated.created_at
+  });
+
+  if (doneChannel?.isTextBased()) {
+    const sent = await doneChannel.send(payload).catch((error) => {
+      logger.error(`Fly-Antrag ${requestId} konnte nicht in den Done-Kanal gesendet werden.`, error);
+      return null;
+    });
+    if (sent) {
+      runtime.db.updateFlyRequestMessage(runtime.config.guildId, requestId, sent.id, doneChannel.id);
+      // Ursprüngliche Nachricht im Antrags-Kanal entfernen.
+      if (updated.message_id && sourceChannel?.isTextBased()) {
+        const original = await sourceChannel.messages.fetch(updated.message_id).catch(() => null);
+        if (original) {
+          await original.delete().catch(() => null);
+        }
+      }
+    }
+  } else if (sourceChannel?.isTextBased()) {
+    // Kein Done-Kanal konfiguriert: im Antrags-Kanal aktualisieren (bisheriges Verhalten).
+    const message = updated.message_id
+      ? await sourceChannel.messages.fetch(updated.message_id).catch(() => null)
+      : null;
     if (message) {
       await message.edit(payload).catch((error) => {
         logger.warn(`Fly-Antrag ${requestId} konnte nicht aktualisiert werden.`, error?.message ?? error);
       });
     } else {
-      const sent = await channel.send(payload).catch((error) => {
+      const sent = await sourceChannel.send(payload).catch((error) => {
         logger.error(`Fly-Antrag ${requestId} konnte nicht neu gesendet werden.`, error);
         return null;
       });
       if (sent) {
-        runtime.db.updateFlyRequestMessage(runtime.config.guildId, requestId, sent.id, channel.id);
+        runtime.db.updateFlyRequestMessage(runtime.config.guildId, requestId, sent.id, sourceChannel.id);
       }
     }
   }
