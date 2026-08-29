@@ -17,6 +17,10 @@ import {
   isOnDuty,
   toggleDutyRole
 } from '../utils/duty.js';
+import {
+  startBewerbung,
+  openBewerbungDecisionModal
+} from '../utils/bewerbung.js';
 
 function hasAnyRole(member, roleIds = []) {
   return roleIds.some((roleId) => roleId && member.roles.cache.has(roleId));
@@ -539,6 +543,23 @@ const handlers = [
     name: 'serverpush_role_toggle',
     match: (customId) => customId === 'serverpush_role_toggle',
     execute: (interaction, runtime) => handleServerPushRoleToggle(interaction, runtime)
+  },
+  {
+    name: 'bewerbung_start',
+    match: (customId) => customId === 'bewerbung_start',
+    execute: (interaction, runtime) => startBewerbung(interaction, runtime)
+  },
+  {
+    name: 'bewerbung_accept',
+    match: (customId) => customId.startsWith('bewerbung_accept:'),
+    execute: (interaction, runtime) =>
+      openBewerbungDecisionModal(interaction, runtime, interaction.customId.split(':')[1], 'accept')
+  },
+  {
+    name: 'bewerbung_reject',
+    match: (customId) => customId.startsWith('bewerbung_reject:'),
+    execute: (interaction, runtime) =>
+      openBewerbungDecisionModal(interaction, runtime, interaction.customId.split(':')[1], 'reject')
   }
 ];
 
