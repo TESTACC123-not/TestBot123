@@ -71,6 +71,7 @@
 
   "fly": {
     "channelId": "",
+    "requestChannelId": "",
     "doneChannelId": ""
   },
 
