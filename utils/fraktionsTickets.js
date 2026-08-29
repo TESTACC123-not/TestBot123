@@ -10,7 +10,9 @@ import {
   SeparatorSpacingSize,
   MessageFlags,
   OverwriteType,
-  PermissionFlagsBits
+  PermissionFlagsBits,
+  StringSelectMenuBuilder,
+  UserSelectMenuBuilder
 } from 'discord.js';
 import { logger } from './logger.js';
 import { formatGermanDateTime } from './time.js';
@@ -58,22 +60,52 @@ export function buildFraktionsTicketPanelPayload() {
   return { flags: MessageFlags.IsComponentsV2, components: [container] };
 }
 
-function buildTicketControlRows(ownerId) {
-  const row = new ActionRowBuilder().addComponents(
+function buildTicketControlRows({ claimedBy = null } = {}) {
+  const row1 = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
-      .setCustomId(`fraktions_ticket_close:${ownerId}`)
+      .setCustomId('fraktions_ticket_claim')
+      .setLabel('Übernehmen')
+      .setEmoji('🎫')
+      .setStyle(ButtonStyle.Primary)
+      .setDisabled(Boolean(claimedBy)),
+    new ButtonBuilder()
+      .setCustomId('fraktions_ticket_release')
+      .setLabel('Freigeben')
+      .setEmoji('🔓')
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(!claimedBy),
+    new ButtonBuilder()
+      .setCustomId('fraktions_ticket_close')
       .setLabel('Schließen')
       .setEmoji('🔒')
+      .setStyle(ButtonStyle.Danger)
+  );
+
+  const row2 = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId('fraktions_ticket_add_person')
+      .setLabel('Person hinzufügen')
+      .setEmoji('➕')
+      .setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId('fraktions_ticket_remove_person')
+      .setLabel('Person entfernen')
+      .setEmoji('➖')
       .setStyle(ButtonStyle.Secondary)
   );
-  return [row];
+
+  return [row1, row2];
 }
 
-export function buildFraktionsTicketPayload({ ownerId, title, status = 'open' }) {
+export function buildFraktionsTicketPayload({ ownerId, title, status = 'open', claimedBy = null } = {}) {
   const statusLine =
     status === 'closed'
       ? '🔒 **Geschlossen** – Dieses Ticket wurde beendet.'
       : '⏳ **Offen** – Warte auf die Bearbeitung durch das Team.';
+
+  const claimedLine = claimedBy
+    ? `Übernommen von ${claimedBy.displayName ?? claimedBy.user?.username ?? claimedBy.id}`
+    : 'Noch nicht übernommen';
 
   const container = new ContainerBuilder()
     .setAccentColor(status === 'closed' ? 0x95a5a6 : 0x3498db)
@@ -91,16 +123,55 @@ export function buildFraktionsTicketPayload({ ownerId, title, status = 'open' })
     )
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small))
     .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(`-# Fraktions-Ticket · ${formatGermanDateTime(Date.now())}`)
+      new TextDisplayBuilder().setContent(`-# ${claimedLine} · ${formatGermanDateTime(Date.now())}`)
     );
 
   if (status === 'open') {
-    for (const row of buildTicketControlRows(ownerId)) {
+    for (const row of buildTicketControlRows({ claimedBy })) {
       container.addActionRowComponents(row);
     }
   }
 
   return { flags: MessageFlags.IsComponentsV2, components: [container] };
+}
+
+export function buildAddPersonSelectPayload() {
+  const row = new ActionRowBuilder().addComponents(
+    new UserSelectMenuBuilder()
+      .setCustomId('fraktions_ticket_adduser_select')
+      .setPlaceholder('Wähle eine Person aus, die hinzugefügt werden soll.')
+      .setMinValues(1)
+      .setMaxValues(1)
+  );
+
+  return { content: 'Wen möchtest du dem Ticket hinzufügen?', components: [row] };
+}
+
+export function buildRemovePersonSelectPayload(channel, ownerId) {
+  const options = getFraktionsTicketMembers(channel).filter((id) => id !== ownerId);
+
+  if (!options.length) {
+    return { content: 'Es sind aktuell keine zusätzlichen Personen im Ticket.', components: [] };
+  }
+
+  const row = new ActionRowBuilder().addComponents(
+    new StringSelectMenuBuilder()
+      .setCustomId('fraktions_ticket_removeuser_select')
+      .setPlaceholder('Wähle eine Person aus, die entfernt werden soll.')
+      .setMinValues(1)
+      .setMaxValues(1)
+      .addOptions(options.map((id) => ({ label: `Nutzer-ID: ${id}`, value: id })))
+  );
+
+  return { content: 'Wen möchtest du aus dem Ticket entfernen?', components: [row] };
+}
+
+export function getFraktionsTicketMembers(channel) {
+  return channel.permissionOverwrites.cache
+    .filter((overwrite) =>
+      overwrite.type === OverwriteType.Member &&
+      overwrite.id !== channel.client.user.id)
+    .map((overwrite) => overwrite.id);
 }
 
 /* ============================================================
