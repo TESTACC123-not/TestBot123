@@ -78,6 +78,24 @@ function normalizeArray(value) {
   return [];
 }
 
+// Wandelt eine Liste von Fragen/Zeilen in ein Array sauberer Strings um.
+// Unterstützt sowohl einfache Strings als auch Objekte mit { question } / { label }.
+function normalizeStringList(value) {
+  if (Array.isArray(value)) {
+    return value
+      .map((entry) => {
+        if (typeof entry === 'string') return entry.trim();
+        if (entry && typeof entry === 'object') {
+          return String(entry.question ?? entry.label ?? entry.text ?? '').trim();
+        }
+        return '';
+      })
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
 export function loadConfig(baseDir = process.cwd()) {
   const configPath = path.join(baseDir, 'config.json');
   const config = readJson(configPath, {});
@@ -282,6 +300,26 @@ export function loadConfig(baseDir = process.cwd()) {
       pingRoleId: config.hausTicket?.pingRoleId ?? ''
     },
 
+    // Bewerbungssystem (Antrag per DM, Ergebnis-Kanal, Annehmen/Ablehnen).
+    bewerbung: {
+      // Kanal, in dem das Bewerbungs-Panel mit dem "Bewerben"-Button liegt.
+      panelChannelId: config.bewerbung?.panelChannelId ?? '',
+      // Kanal, in dem fertige Bewerbungen mit Ping erscheinen.
+      resultChannelId: config.bewerbung?.resultChannelId ?? '',
+      // Rolle, die bei einer neuen Bewerbung gepinnt wird.
+      pingRoleId: config.bewerbung?.pingRoleId ?? '',
+      // Rolle, die ein angenommener Bewerber bekommt.
+      acceptRoleId: config.bewerbung?.acceptRoleId ?? '',
+      // Rolle, die ein abgelehnter Bewerber für eine Zeit bekommt.
+      rejectRoleId: config.bewerbung?.rejectRoleId ?? '',
+      // Wie lange die Ablehnungs-Rolle gesetzt bleibt (Stunden, Standard 48).
+      rejectDurationHours: Math.max(1, Number(config.bewerbung?.rejectDurationHours) || 48),
+      // Rollen, die Annehmen/Ablehnen dürfen.
+      reviewerRoleIds: normalizeArray(config.bewerbung?.reviewerRoleIds),
+      // Bewerbungs-Fragen, die per DM gestellt werden (eine nach der anderen).
+      questions: normalizeStringList(config.bewerbung?.questions)
+    },
+
     // Team-Update-Nachrichten (z. B. Beförderungen).
     teamUpdate: {
       channelId: config.teamUpdate?.channelId ?? '',
@@ -350,6 +388,10 @@ export function loadConfig(baseDir = process.cwd()) {
       activeAbsences: {
         channelId: config.panels?.activeAbsences?.channelId ?? '',
         messageId: config.panels?.activeAbsences?.messageId ?? ''
+      },
+      bewerbung: {
+        channelId: config.panels?.bewerbung?.channelId ?? '',
+        messageId: config.panels?.bewerbung?.messageId ?? ''
       }
     }
   };
