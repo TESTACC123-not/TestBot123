@@ -233,6 +233,8 @@ export function loadConfig(baseDir = process.cwd()) {
     // Kanäle für Fly- / Nametag-Anträge.
     fly: {
       channelId: config.fly?.channelId ?? '',
+      // Eigener Kanal für neue Anträge (getrennt vom Panel).
+      requestChannelId: config.fly?.requestChannelId ?? '',
       // Spezieller Kanal, in den bearbeitete Anträge verschoben werden.
       doneChannelId: config.fly?.doneChannelId ?? ''
     },
