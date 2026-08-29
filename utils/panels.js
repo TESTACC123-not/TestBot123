@@ -9,6 +9,7 @@ import {
   PermissionFlagsBits
 } from 'discord.js';
 import { buildActiveAbsencesEmbeds, buildAbsencePanelPayload, buildDutyPanelPayload, buildFlyPanelPayload, buildSupportCaseChannelMessage, buildSupportLeaderboardPayload, buildTeamListEmbeds, buildVerifyPanelPayload } from './renderers.js';
+import { buildTeamPingsPanelPayload } from './teamPings.js';
 import * as trainerDashboard from './trainerDashboard.js';
 import { logger, sendLog } from './logger.js';
 import { syncWaitingRooms } from './waitingRooms.js';
@@ -779,6 +780,20 @@ async function syncExpiredAbsences(client, runtime) {
   return changed;
 }
 
+async function refreshTeamPingsPanel(client, runtime) {
+  const channelId = runtime.config.teamPings?.channelId;
+  if (!channelId) {
+    return null;
+  }
+  return upsertPanelMessage(
+    client,
+    runtime,
+    'teamPings',
+    channelId,
+    buildTeamPingsPanelPayload(runtime.config)
+  );
+}
+
 async function refreshAllPanels(client, runtime) {
   await Promise.allSettled([
     refreshSupportLeaderboardPanel(client, runtime),
@@ -790,7 +805,8 @@ async function refreshAllPanels(client, runtime) {
     refreshFlyPanel(client, runtime),
     refreshAbsencePanel(client, runtime),
     refreshActiveAbsencePanel(client, runtime),
-    refreshBewerbungPanel(client, runtime)
+    refreshBewerbungPanel(client, runtime),
+    refreshTeamPingsPanel(client, runtime)
   ]);
 }
 
@@ -849,6 +865,7 @@ export {
   refreshFlyPanel,
   refreshAbsencePanel,
   refreshActiveAbsencePanel,
+  refreshTeamPingsPanel,
   syncAutomaticTrainerAssignments,
   syncOpenSupportCases,
   openSupportCaseForMember,
