@@ -1,0 +1,129 @@
+{
+  "default": "[TEAM]",
+  "mappings": [
+    {
+      "roleId": "1533405142768947391",
+      "nametag": "MNRP | Inhaber | (name) | ooc"
+    },
+    {
+      "roleId": "1533767602839621722",
+      "nametag": "MNRP | Stv. Inhaber | (name) | ooc"
+    },
+    {
+      "roleId": "1533405143733899335",
+      "nametag": "MNRP | Owner | (name) | ooc"
+    },
+    {
+      "roleId": "1533405146581831751",
+      "nametag": "MNRP | Stv. Owner | (name) | ooc"
+    },
+    {
+      "roleId": "1533405147458306159",
+      "nametag": "MNRP | Direktor | (name) | ooc"
+    },
+    {
+      "roleId": "1533420206993440959",
+      "nametag": "MNRP | Stv. Direktor | (name) | ooc"
+    },
+    {
+      "roleId": "1533405148511076433",
+      "nametag": "MNRP | PL | (name) | ooc"
+    },
+    {
+      "roleId": "1533405149718909009",
+      "nametag": "MNRP | Stv. PL | (name) | ooc"
+    },
+    {
+      "roleId": "1533405150507565140",
+      "nametag": "MNRP | PKR | (name) | ooc"
+    },
+    {
+      "roleId": "1533405152134823946",
+      "nametag": "MNRP | Stv. PKR | (name) | ooc"
+    },
+    {
+      "roleId": "1533405154047557724",
+      "nametag": "MNRP | Manager | (name) | ooc"
+    },
+    {
+      "roleId": "1533807955860918505",
+      "nametag": "MNRP | Stv. Manager | (name) | ooc"
+    },
+    {
+      "roleId": "1533405155398127676",
+      "nametag": "MNRP | H-TL | (name) | ooc"
+    },
+    {
+      "roleId": "1533405156492968097",
+      "nametag": "MNRP | TL | (name) | ooc"
+    },
+    {
+      "roleId": "1533405157734219776",
+      "nametag": "MNRP | Stv. TL | (name) | ooc"
+    },
+    {
+      "roleId": "1533405160225640649",
+      "nametag": "MNRP | Supervisor Leitung | (name) | ooc"
+    },
+    {
+      "roleId": "1533405161379332187",
+      "nametag": "MNRP | Supervisor | (name) | ooc"
+    },
+    {
+      "roleId": "1533419971768488067",
+      "nametag": "MNRP | Stv. Supervisor | (name) | ooc"
+    },
+    {
+      "roleId": "1533405162335371477",
+      "nametag": "MNRP | ASBL | (name) | ooc"
+    },
+    {
+      "roleId": "1533405166110244945",
+      "nametag": "MNRP | H-Admin | (name) | ooc"
+    },
+    {
+      "roleId": "1533405167028928572",
+      "nametag": "MNRP | Sr-Admin | (name) | ooc"
+    },
+    {
+      "roleId": "1533405167997816912",
+      "nametag": "MNRP | Admin | (name) | ooc"
+    },
+    {
+      "roleId": "1533405168652124241",
+      "nametag": "MNRP | Jr-Admin | (name) | ooc"
+    },
+    {
+      "roleId": "1533405171864834221",
+      "nametag": "MNRP | H-Mod | (name) | ooc"
+    },
+    {
+      "roleId": "1533405173127450736",
+      "nametag": "MNRP | Sr-Mod | (name) | ooc"
+    },
+    {
+      "roleId": "1533405174297530510",
+      "nametag": "MNRP | Mod | (name) | ooc"
+    },
+    {
+      "roleId": "1533405175409148035",
+      "nametag": "MNRP | Jr-Mod | (name) | ooc"
+    },
+    {
+      "roleId": "1533405179326496828",
+      "nametag": "MNRP | H-Sup | (name) | ooc"
+    },
+    {
+      "roleId": "1533405180287254528",
+      "nametag": "MNRP | Sr-Sup | (name) | ooc"
+    },
+    {
+      "roleId": "1533405181100818484",
+      "nametag": "MNRP | Sup | (name) | ooc"
+    },
+    {
+      "roleId": "1533405182493462648",
+      "nametag": "MNRP | T-Sup | (name) | ooc"
+    }
+  ]
+}
