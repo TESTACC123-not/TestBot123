@@ -469,7 +469,6 @@ export function buildFlyRequestPayload({
 }) {
   const discordMention = `<@${requestRecord.user_id}>`;
   const robloxMention = escapeCodeblockValue(requestRecord.roblox_name).replace(/^@+/, '');
-  const flyDisplayName = escapeCodeblockValue(requestRecord.display_name);
   const flyNametag = escapeCodeblockValue(requestRecord.nametag);
   const roleMention = pingRoleId ? `<@&${pingRoleId}>` : null;
 
@@ -480,7 +479,7 @@ export function buildFlyRequestPayload({
     { name: 'Rang', value: requestRecord.rank || (requestRecord.team_role_id ? `<@&${requestRecord.team_role_id}>` : 'Nicht erkannt') },
     { name: 'Nametag', value: `\`${requestRecord.nametag}\`` },
     { name: 'Kopierbefehl 1', value: `\`\`\`text\nnametag set ${robloxMention} ${flyNametag}\n\`\`\`` },
-    { name: 'Kopierbefehl 2', value: `\`\`\`text\nfly ${flyDisplayName}\n\`\`\`` },
+    { name: 'Kopierbefehl 2', value: `\`\`\`text\nfly ${robloxMention}\n\`\`\`` },
     { name: 'Erstellt am', value: formatGermanDateTime(requestRecord.created_at) }
   ];
 
