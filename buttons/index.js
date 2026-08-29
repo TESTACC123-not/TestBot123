@@ -481,7 +481,7 @@ async function handleTeamPing(interaction, runtime, roleId) {
 
   const error = await triggerTeamPing(interaction, runtime, roleId);
   return interaction.editReply({
-    content: error ? `❌ ${error}` : '✅ Team-Ping wurde gesendet.'
+    content: error ? `❌ ${error}` : '✅ Rolle wurde zugewiesen.'
   }).catch(() => null);
 }
 
