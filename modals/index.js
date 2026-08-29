@@ -146,7 +146,8 @@ async function handleFlyModal(interaction, runtime) {
 
   runtime.db.createFlyRequest(record);
   const message = await targetChannel.send(buildFlyRequestPayload({
-    pingRoleId: runtime.config.roles.onDutyRoleId,
+    // Ping statt der generischen On-Duty-Rolle: die Teamrolle des Antrags (Rolle für den Anzeigenamen).
+    pingRoleId: record.teamRoleId || runtime.config.roles.onDutyRoleId,
     requestRecord: {
       request_id: record.requestId,
       user_id: record.userId,
