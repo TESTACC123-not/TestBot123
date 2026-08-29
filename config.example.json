@@ -177,13 +177,14 @@
 
   "teamPings": {
     "channelId": "KANAL_FUER_DAS_TEAM_PING_PANEL",
-    "pingChannelId": "KANAL_IN_DEM_DIE_PINGS_ERSCHEINEN_OPTIONAL",
     "pings": [
-      { "label": "Team Umfrage", "emoji": "📈", "roleId": "1542457659083464734" },
-      { "label": "Serverpush", "emoji": "📈", "roleId": "1542457651211010138" },
-      { "label": "Teamabend", "emoji": "🎉", "roleId": "1542457661331738726" },
-      { "label": "Bau Ping", "emoji": "🔨", "roleId": "1542457664829784096" },
-      { "label": "Team Updates", "emoji": "🛡️", "roleId": "1542457665488429128" }
+      { "label": "Team Umfrage", "emoji": "📈", "roleId": "1542457659083464734", "waitingRoomType": "" },
+      { "label": "Serverpush", "emoji": "📈", "roleId": "1542457651211010138", "waitingRoomType": "" },
+      { "label": "Teamabend", "emoji": "🎉", "roleId": "1542457661331738726", "waitingRoomType": "" },
+      { "label": "Bau Ping", "emoji": "🔨", "roleId": "1542457664829784096", "waitingRoomType": "" },
+      { "label": "Team Updates", "emoji": "🛡️", "roleId": "1542457665488429128", "waitingRoomType": "" },
+      { "label": "High Team Warteraum", "emoji": "👥", "roleId": "DEINE_HIGHTEAM_DIENSTROLLE", "waitingRoomType": "highTeam" },
+      { "label": "Leitung", "emoji": "👑", "roleId": "DEINE_LEITUNG_DIENSTROLLE", "waitingRoomType": "leitung" }
     ]
   },
 
