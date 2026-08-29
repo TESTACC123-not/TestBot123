@@ -47,8 +47,11 @@ function buildTeamListChunks(teamRoles, members, rows, maxLength = 3400) {
     ? members
     : Array.from(members.values());
 
-  // Jede Rolle als fertiger, abgeschlossener Textblock bauen (Nummerierung pro Rolle).
+  // Jede Rolle als fertiger, abgeschlossener Textblock bauen.
+  // Die Teamnummern laufen DURCHGEHEND von 1 an: Founder = 1, danach jede
+  // weitere Person / jeder weitere Rang die nächste Nummer (nicht pro Rolle neu).
   const roleBlocks = [];
+  let teamNumber = 0;
 
   for (const teamRole of teamRoles) {
     if (!teamRole?.id) {
@@ -66,10 +69,11 @@ function buildTeamListChunks(teamRoles, members, rows, maxLength = 3400) {
       continue;
     }
 
-    const padWidth = String(roleMembers.length).length;
-    const lines = roleMembers.map((member, index) => {
+    const padWidth = String(memberCount).length;
+    const lines = roleMembers.map((member) => {
       const roblox = rows.get(member.id)?.roblox_name;
-      const number = String(index + 1).padStart(Math.max(padWidth, 2), '0');
+      teamNumber += 1;
+      const number = String(teamNumber).padStart(Math.max(padWidth, 2), '0');
       const robloxLabel = roblox ? `\`${roblox}\`` : '*kein Roblox-Name*';
       return `\`${number}.\` <@${member.id}> — ${robloxLabel}`;
     });
