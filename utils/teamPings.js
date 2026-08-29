@@ -32,7 +32,7 @@ export function buildTeamPingsPanelPayload(config) {
   const pings = getTeamPings(config);
 
   const lines = pings.length
-    ? pings.map((ping) => `${ping.emoji ?? ''} **${ping.label}** – <@&${ping.roleId}>`).join('\n')
+    ? pings.map((ping) => `${ping.emoji ?? ''} **${ping.label}**`).join('\n')
     : 'Noch keine Team-Pings in der config.json hinterlegt.';
 
   const buttons = new ActionRowBuilder();
@@ -50,8 +50,10 @@ export function buildTeamPingsPanelPayload(config) {
   const container = new ContainerBuilder()
     .setAccentColor(0x5865f2)
     .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent('📢 **Team-Ping**'),
-      new TextDisplayBuilder().setContent('Wähle eine Schaltfläche, um die jeweilige Team-Gruppe zu benachrichtigen.')
+      new TextDisplayBuilder().setContent('📢 **Team-Ping (Umschalt-Modul)**'),
+      new TextDisplayBuilder().setContent(
+        'Klicke auf eine Schaltfläche, um die Rolle zu aktivieren. Ein erneuter Klick deaktiviert sie wieder.'
+      )
     )
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small))
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(lines));
@@ -87,10 +89,29 @@ export function isTeamPingAllowed(member, runtime) {
   return hasAnyRole(member, teamRoleIds);
 }
 
+function getWaitingRoomChannelId(runtime, waitingRoomType) {
+  if (!waitingRoomType) {
+    return '';
+  }
+  const area = runtime.config.duty?.areas?.[waitingRoomType];
+  return area?.waitingChannelId ?? '';
+}
+
+async function fetchVoiceChannel(guild, channelId) {
+  if (!channelId) {
+    return null;
+  }
+  const channel = await guild.channels.fetch(channelId).catch(() => null);
+  return channel?.isVoiceBased?.() ? channel : null;
+}
+
 /**
- * Löst den Klick eines Team-Ping-Buttons aus.
- * Die zur Schaltfläche gehörende Rolle wird dem klickenden Mitglied ZUGEWIESEN
- * (kein Ping, keine Nachricht). Der Mentionable-Status der Rolle wird dabei nicht geändert.
+ * Löst den Klick eines Team-Ping-Buttons aus (Umschalt-Modul).
+ *  - Hat das Mitglied die Rolle noch nicht: Rolle wird VERGEBEN. Ist der Button mit
+ *    einem Warteraum verknüpft (waitingRoomType), wird der Benutzer in diesen Kanal
+ *    verschoben (wie im Support-/Wartebereich-System).
+ *  - Hat das Mitglied die Rolle schon: Rolle wird ENTFERNT. Bei verknüpftem Warteraum
+ *    wird der Benutzer aus dem Call gekickt.
  */
 export async function triggerTeamPing(interaction, runtime, roleId) {
   const ping = getTeamPingByRoleId(runtime.config, roleId);
@@ -103,12 +124,35 @@ export async function triggerTeamPing(interaction, runtime, roleId) {
     return 'Dein Mitglied konnte nicht ermittelt werden.';
   }
 
-  try {
-    await member.roles.add(roleId, 'Team-Ping');
-  } catch (error) {
-    logger.warn('Team-Ping: Rolle konnte nicht zugewiesen werden.', error?.message ?? error);
-    return 'Die Rolle konnte nicht zugewiesen werden. Prüfe die Bot-Berechtigungen.';
-  }
+  const waitingRoomType = ping.waitingRoomType ?? '';
+  const waitingChannelId = getWaitingRoomChannelId(runtime, waitingRoomType);
+  const hasRole = member.roles.cache.has(roleId);
 
-  return null;
+  try {
+    if (hasRole) {
+      // AUS: Rolle entfernen, aus dem Call kicken (falls Warteraum verknüpft).
+      await member.roles.remove(roleId, 'Team-Ping (deaktiviert)');
+      if (waitingRoomType && waitingChannelId) {
+        await member.voice.disconnect().catch((error) => {
+          logger.warn('Team-Ping: Benutzer konnte nicht aus dem Call gekickt werden.', error?.message ?? error);
+        });
+      }
+      return null;
+    }
+
+    // AN: Rolle vergeben, in den Warteraum verschieben (falls verknüpft).
+    await member.roles.add(roleId, 'Team-Ping (aktiviert)');
+    if (waitingRoomType && waitingChannelId) {
+      const channel = await fetchVoiceChannel(interaction.guild, waitingChannelId);
+      if (channel) {
+        await member.voice.setChannel(channel.id).catch((error) => {
+          logger.warn(`Team-Ping: Benutzer konnte nicht in Warteraum ${waitingChannelId} verschoben werden.`, error?.message ?? error);
+        });
+      }
+    }
+    return null;
+  } catch (error) {
+    logger.warn('Team-Ping: Rollenwechsel fehlgeschlagen.', error?.message ?? error);
+    return 'Der Rollenwechsel konnte nicht durchgeführt werden. Prüfe die Bot-Berechtigungen.';
+  }
 }
