@@ -481,7 +481,6 @@ export function buildFlyRequestPayload({
     { name: 'Nametag', value: `\`${requestRecord.nametag}\`` },
     { name: 'Kopierbefehl 1', value: `\`\`\`text\nnametag set ${robloxMention} ${flyNametag}\n\`\`\`` },
     { name: 'Kopierbefehl 2', value: `\`\`\`text\nfly ${flyDisplayName}\n\`\`\`` },
-    { name: 'Begründung', value: requestRecord.reason },
     { name: 'Erstellt am', value: formatGermanDateTime(requestRecord.created_at) }
   ];
 
@@ -643,7 +642,9 @@ export function resolveNametagForMember(member, config, nametags, displayName = 
   }
 
   const mapping = nametags.mappings.find((entry) => entry.roleId && member.roles.cache.has(entry.roleId));
-  const template = mapping?.nametag ?? nametags.default ?? null;
+  // Falls keine Mapping-Regel passt, zeige den Rang (Label der Teamrolle)
+  // statt des generischen "[TEAM]"-Defaults.
+  const template = mapping?.nametag ?? teamRole.label ?? nametags.default ?? null;
   return {
     teamRole,
     nametag: renderTemplate(template, displayName),
