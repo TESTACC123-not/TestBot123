@@ -16,6 +16,7 @@ export class BotDatabase {
     this.db.pragma('journal_mode = WAL');
     this.db.pragma('foreign_keys = ON');
     this.#init();
+    this.#migrateFlyRanks();
     this.#migrateTrainerAssignments();
     this.#dedupeTrainerAssignmentsByTsup();
   }
@@ -117,6 +118,7 @@ export class BotDatabase {
         reason TEXT NOT NULL,
         roblox_name TEXT NOT NULL,
         team_role_id TEXT,
+        rank TEXT,
         nametag TEXT NOT NULL,
         created_at INTEGER NOT NULL,
         reviewed_at INTEGER,
@@ -183,6 +185,17 @@ export class BotDatabase {
         updated_at INTEGER NOT NULL,
         PRIMARY KEY (guild_id, property_id)
       );
+    `);
+  }
+
+  #migrateFlyRanks() {
+    const columns = this.db.prepare('PRAGMA table_info(fly_requests)').all();
+    if (!columns.length || columns.some((column) => column.name === 'rank')) {
+      return;
+    }
+
+    this.db.exec(`
+      ALTER TABLE fly_requests ADD COLUMN rank TEXT;
     `);
   }
 
@@ -663,8 +676,8 @@ export class BotDatabase {
   createFlyRequest(record) {
     this.db.prepare(`
       INSERT INTO fly_requests (
-        request_id, guild_id, user_id, display_name, reason, roblox_name, team_role_id, nametag, created_at, reviewed_at, reviewer_id, status, message_channel_id, message_id
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        request_id, guild_id, user_id, display_name, reason, roblox_name, team_role_id, rank, nametag, created_at, reviewed_at, reviewer_id, status, message_channel_id, message_id
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       record.requestId,
       record.guildId,
@@ -673,6 +686,7 @@ export class BotDatabase {
       record.reason,
       record.robloxName,
       record.teamRoleId ?? null,
+      record.rank ?? null,
       record.nametag,
       record.createdAt,
       record.reviewedAt ?? null,
