@@ -480,8 +480,13 @@ async function handleTeamPing(interaction, runtime, roleId) {
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   const error = await triggerTeamPing(interaction, runtime, roleId);
+  if (error) {
+    return interaction.editReply({ content: `❌ ${error}` }).catch(() => null);
+  }
+
+  const hasRole = interaction.member?.roles?.cache?.has(roleId);
   return interaction.editReply({
-    content: error ? `❌ ${error}` : '✅ Rolle wurde zugewiesen.'
+    content: hasRole ? '✅ Rolle wurde zugewiesen.' : '✅ Rolle wurde entfernt.'
   }).catch(() => null);
 }
 
