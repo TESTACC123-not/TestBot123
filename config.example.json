@@ -175,6 +175,18 @@
     "warnRoleIds": []
   },
 
+  "teamPings": {
+    "channelId": "KANAL_FUER_DAS_TEAM_PING_PANEL",
+    "pingChannelId": "KANAL_IN_DEM_DIE_PINGS_ERSCHEINEN_OPTIONAL",
+    "pings": [
+      { "label": "Team Umfrage", "emoji": "📈", "roleId": "1542457659083464734" },
+      { "label": "Serverpush", "emoji": "📈", "roleId": "1542457651211010138" },
+      { "label": "Teamabend", "emoji": "🎉", "roleId": "1542457661331738726" },
+      { "label": "Bau Ping", "emoji": "🔨", "roleId": "1542457664829784096" },
+      { "label": "Team Updates", "emoji": "🛡️", "roleId": "1542457665488429128" }
+    ]
+  },
+
   "verify": {
     "questions": [
       {
