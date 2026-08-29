@@ -382,13 +382,20 @@ async function refreshWaitingRequestMessage(interaction, runtime, request, type)
 }
 
 async function moveMemberToChannel(member, channelId) {
-  if (!channelId) {
+  if (!isValidChannelId(channelId)) {
     return;
   }
 
   await member.voice.setChannel(channelId).catch((error) => {
     logger.warn(`Benutzer ${member.id} konnte nicht in Kanal ${channelId} verschoben werden.`, error?.message ?? error);
   });
+}
+
+// Nur echte Discord-Kanal-IDs (reine Ziffern) als gültig betrachten.
+// Platzhalter wie "LEITUNG_BEARBEITUNG_VOICE" werden ignoriert, damit keine
+// fehlgeschlagenen Verschiebe-Versuche (und keine Warn-Logs) entstehen.
+function isValidChannelId(channelId) {
+  return typeof channelId === 'string' && /^\d{10,25}$/.test(channelId.trim());
 }
 
 async function replyEphemeral(interaction, content) {
