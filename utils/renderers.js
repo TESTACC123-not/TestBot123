@@ -477,7 +477,7 @@ export function buildFlyRequestPayload({
     { name: 'Discord', value: discordMention },
     { name: 'Roblox-Name', value: `\`${requestRecord.roblox_name}\`` },
     { name: 'Anzeigename', value: `\`${requestRecord.display_name}\`` },
-    { name: 'Teamrolle', value: requestRecord.team_role_id ? `<@&${requestRecord.team_role_id}>` : 'Nicht erkannt' },
+    { name: 'Rang', value: requestRecord.rank || (requestRecord.team_role_id ? `<@&${requestRecord.team_role_id}>` : 'Nicht erkannt') },
     { name: 'Nametag', value: `\`${requestRecord.nametag}\`` },
     { name: 'Kopierbefehl 1', value: `\`\`\`text\nnametag set ${robloxMention} ${flyNametag}\n\`\`\`` },
     { name: 'Kopierbefehl 2', value: `\`\`\`text\nfly ${flyDisplayName}\n\`\`\`` },
