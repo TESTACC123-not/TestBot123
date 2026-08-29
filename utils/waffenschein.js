@@ -30,7 +30,14 @@ export function getWaffenscheinTypes(config) {
   return Object.fromEntries(
     Object.entries(types).map(([key, value]) => [
       String(key).toLowerCase(),
-      typeof value === 'string' ? { label: value, description: '', price: '' } : (value || {})
+      typeof value === 'string'
+        ? { label: value, description: '', price: '', roleId: '' }
+        : {
+            label: value?.label ?? String(key),
+            description: value?.description ?? '',
+            price: value?.price ?? '',
+            roleId: value?.roleId ?? ''
+          }
     ])
   );
 }
@@ -72,13 +79,23 @@ export function buildWaffenscheinPanelPayload() {
   return { flags: MessageFlags.IsComponentsV2, components: [container] };
 }
 
-export function buildWaffenscheinTypeSelectPayload() {
+export function buildWaffenscheinTypeSelectPayload(config) {
+  const types = getWaffenscheinTypes(config);
+
   const row = new ActionRowBuilder().addComponents(
     new StringSelectMenuBuilder()
       .setCustomId('waffenschein_select')
       .setPlaceholder('Wähle deine Waffenschein-Stufe aus.')
       .setMinValues(1)
       .setMaxValues(1)
+      .addOptions(
+        ...Object.entries(types).map(([key, type]) => ({
+          label: type.label || `Waffenschein ${String(key).toUpperCase()}`,
+          value: String(key).toLowerCase(),
+          description: (type.description || '').slice(0, 100),
+          emoji: '🔫'
+        }))
+      )
   );
 
   return { content: 'Welchen Waffenschein möchtest du beantragen?', components: [row] };
