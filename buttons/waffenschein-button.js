@@ -38,7 +38,11 @@ async function handleOpen(interaction, runtime) {
   }
 
   const { buildWaffenscheinTypeSelectPayload } = await import('../utils/waffenschein.js');
-  return interaction.reply(buildWaffenscheinTypeSelectPayload(runtime.config));
+  // Ephemeral: Das Auswahlmenü sehen nur der Klickende – nicht der ganze Server.
+  return interaction.reply({
+    ...buildWaffenscheinTypeSelectPayload(runtime.config),
+    flags: MessageFlags.Ephemeral
+  });
 }
 
 /* Im Ticket: annehmen -> Rolle + DM */
