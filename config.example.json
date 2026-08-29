@@ -1,5 +1,6 @@
 {
   "guildId": "DEINE_SERVER_ID",
+  "clientId": "DEINE_BOT_ID",
   "token": "",
 
   "duty": {
