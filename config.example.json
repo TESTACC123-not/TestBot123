@@ -83,6 +83,38 @@
     "pingRoleId": ""
   },
 
+  "waffenschein": {
+    "panelChannelId": "KANAL_MIT_WAFFENSCHEIN_PANEL",
+    "categoryId": "KATEGORIE_FUER_WAFFENSCHEIN_TICKETS",
+    "pingRoleId": "ROLLE_DIE_BEI_NEUEM_TICKET_GEPINNT_WIRD",
+    "acceptRoleId": "ROLLE_DIE_BEI_ANNAHME_VERGEBEN_WIRD",
+    "bankAccount": "Guar443344",
+    "types": {
+      "a": {
+        "label": "Waffenschein A",
+        "description": "Kleinkaliber-Waffen",
+        "price": "100.000$"
+      },
+      "b": {
+        "label": "Waffenschein B",
+        "description": "Mittelkaliber-Waffen",
+        "price": "200.000$"
+      },
+      "c": {
+        "label": "Waffenschein C",
+        "description": "Großkaliber-Waffen",
+        "price": "300.000$"
+      }
+    }
+  },
+
+  "fraktionsTickets": {
+    "panelChannelId": "KANAL_MIT_FRAKTIONS_TICKET_PANEL",
+    "categoryId": "KATEGORIE_FUER_FRAKTIONS_TICKETS",
+    "pingRoleId": "ROLLE_DIE_BEI_NEUEM_TICKET_GEPINNT_WIRD",
+    "title": "Fraktions-Anfrage"
+  },
+
   "bewerbung": {
     "panelChannelId": "KANAL_MIT_BEWERBEN_BUTTON",
     "resultChannelId": "KANAL_MIT_FERTIGEN_BEWERBUNGEN",
