@@ -285,7 +285,11 @@ export function loadConfig(baseDir = process.cwd()) {
     // Team-Update-Nachrichten (z. B. Beförderungen).
     teamUpdate: {
       channelId: config.teamUpdate?.channelId ?? '',
-      warnPingRoleId: config.teamUpdate?.warnPingRoleId ?? '',
+      // Rolle, die bei JEDEM Team-Update-Eintrag gepinnt wird (alle Vorlagen).
+      teamPingRoleId:
+        config.teamUpdate?.teamPingRoleId ??
+        config.teamUpdate?.warnPingRoleId ??
+        '',
       warnRoleIds: normalizeArray(config.teamUpdate?.warnRoleIds)
     },
 
