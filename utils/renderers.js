@@ -469,7 +469,8 @@ export function buildFlyRequestPayload({
 }) {
   const discordMention = `<@${requestRecord.user_id}>`;
   const robloxMention = escapeCodeblockValue(requestRecord.roblox_name).replace(/^@+/, '');
-  const flyNametag = escapeCodeblockValue(requestRecord.nametag);
+  // Das Nametag mit dem Anzeigenamen rendern, damit der Name im Kopierbefehl 1 steht.
+  const flyNametag = escapeCodeblockValue(renderTemplate(requestRecord.nametag, requestRecord.display_name));
   const roleMention = pingRoleId ? `<@&${pingRoleId}>` : null;
 
   const fields = [
