@@ -86,7 +86,7 @@ async function handleAccept(interaction, runtime) {
   // DM an den Antragsteller
   try {
     await member.send(
-      `✅ **Dein Waffenschein wurde angenommen!**\nStufe: ${type?.label ?? parsed.typeKey}\n\nFalls noch nicht geschehen, überweise den Betrag an **${bankAccount}** und sende den Beleg im Ticket.`
+      `✅ **Dein Waffenschein wurde angenommen!**\nStufe: ${type?.label ?? parsed.typeKey}`
     );
   } catch {
     logger.warn('DM an den Waffenschein-Antragsteller fehlgeschlagen.', member.id);
@@ -106,6 +106,15 @@ async function handleAccept(interaction, runtime) {
   }
 
   await replyEphemeral(interaction, '✅ Der Antrag wurde angenommen. Der Antragsteller wurde benachrichtigt.');
+
+  // Ticket automatisch schließen (nach kurzer Verzögerung löschen)
+  setTimeout(() => {
+    interaction.channel.delete().catch((error) => {
+      logger.warn('Waffenschein-Ticket konnte nach Annahme nicht geschlossen werden.', error?.message ?? error);
+    });
+  }, 3000);
+
+  return null;
 }
 
 /* Im Ticket: ablehnen -> DM */
