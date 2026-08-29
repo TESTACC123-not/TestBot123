@@ -6,20 +6,19 @@ export default {
   name: 'messageCreate',
   once: false,
   async execute(message, runtime) {
+    // Konsolen-Log NUR für Bot-Nachrichten – damit wird nicht jede Server-Nachricht
+    // ins Log geschrieben, sondern nur die Nachrichten, die der Bot selbst sendet.
     if (message.author.bot) {
+      const channelLabel = message.channel?.isDMBased?.()
+        ? 'DM'
+        : `#${message.channel?.name || message.channelId}`;
+      const contentPreview = String(message.content || '').replace(/\s+/g, ' ').trim();
+      logger.info(
+        `[BOT] ${channelLabel} | ${message.author.tag} (${message.author.id})` +
+          (contentPreview ? ` | "${contentPreview.slice(0, 300)}"` : ' | (ohne Text)')
+      );
       return;
     }
-
-    // Konsolen-Log für JEDE eingehende Nachricht – hilft zu sehen, was der Bot
-    // empfängt (Kanal, Autor, Inhalt, Systeme wie Waffenschein/Fraktions-Ticket).
-    const channelLabel = message.channel?.isDMBased?.()
-      ? 'DM'
-      : `#${message.channel?.name || message.channelId}`;
-    const contentPreview = String(message.content || '').replace(/\s+/g, ' ').trim();
-    logger.info(
-      `[MSG] ${channelLabel} | ${message.author.tag} (${message.author.id})` +
-        (contentPreview ? ` | "${contentPreview.slice(0, 300)}"` : ' | (ohne Text)')
-    );
 
     // Bewerbungs-Dialog per DM: Antworten auf die gestellten Fragen erfassen.
     if (message.channel?.isDMBased?.()) {
