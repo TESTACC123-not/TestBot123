@@ -128,6 +128,33 @@ export class BotDatabase {
 
       CREATE INDEX IF NOT EXISTS idx_fly_requests_guild_status ON fly_requests(guild_id, status);
 
+      CREATE TABLE IF NOT EXISTS bewerbungen (
+        application_id TEXT PRIMARY KEY,
+        guild_id TEXT NOT NULL,
+        user_id TEXT NOT NULL,
+        answers_json TEXT NOT NULL,
+        status TEXT NOT NULL,
+        created_at INTEGER NOT NULL,
+        reviewed_at INTEGER,
+        reviewer_id TEXT,
+        review_reason TEXT,
+        message_channel_id TEXT,
+        message_id TEXT,
+        reject_role_removed_at INTEGER
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_bewerbungen_guild_status ON bewerbungen(guild_id, status);
+      CREATE INDEX IF NOT EXISTS idx_bewerbungen_user ON bewerbungen(guild_id, user_id);
+
+      CREATE TABLE IF NOT EXISTS bewerbung_sessions (
+        guild_id TEXT NOT NULL,
+        user_id TEXT NOT NULL,
+        current_index INTEGER NOT NULL DEFAULT 0,
+        answers_json TEXT NOT NULL DEFAULT '[]',
+        started_at INTEGER NOT NULL,
+        PRIMARY KEY (guild_id, user_id)
+      );
+
       CREATE TABLE IF NOT EXISTS absences (
         absence_id TEXT PRIMARY KEY,
         guild_id TEXT NOT NULL,
@@ -755,6 +782,140 @@ export class BotDatabase {
 
   removeMemberData(guildId, userId) {
     this.deleteRobloxName(guildId, userId);
+  }
+
+  // ----------------------------------------------------------------------
+  //  BEWERBUNGEN  (Antragssystem)
+  // ----------------------------------------------------------------------
+
+  createBewerbung(record) {
+    this.db.prepare(`
+      INSERT INTO bewerbungen (
+        application_id, guild_id, user_id, answers_json, status, created_at, reviewed_at,
+        reviewer_id, review_reason, message_channel_id, message_id, reject_role_removed_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      record.applicationId,
+      record.guildId,
+      record.userId,
+      JSON.stringify(record.answers ?? []),
+      record.status,
+      record.createdAt,
+      record.reviewedAt ?? null,
+      record.reviewerId ?? null,
+      record.reviewReason ?? null,
+      record.messageChannelId ?? null,
+      record.messageId ?? null,
+      record.rejectRoleRemovedAt ?? null
+    );
+  }
+
+  getBewerbung(applicationId, guildId) {
+    return this.db.prepare('SELECT * FROM bewerbungen WHERE application_id = ? AND guild_id = ?').get(applicationId, guildId) ?? null;
+  }
+
+  getOpenBewerbungByUser(guildId, userId) {
+    return this.db.prepare(`
+      SELECT * FROM bewerbungen
+      WHERE guild_id = ? AND user_id = ? AND status = 'open'
+      ORDER BY created_at DESC
+      LIMIT 1
+    `).get(guildId, userId) ?? null;
+  }
+
+  reviewBewerbung(guildId, applicationId, { status, reviewerId, reviewReason }) {
+    const result = this.db.prepare(`
+      UPDATE bewerbungen
+      SET status = ?, reviewed_at = ?, reviewer_id = ?, review_reason = ?
+      WHERE guild_id = ? AND application_id = ? AND status = 'open'
+    `).run(status, Date.now(), reviewerId, reviewReason ?? null, guildId, applicationId);
+
+    return result.changes === 1;
+  }
+
+  updateBewerbungMessage(guildId, applicationId, messageId, messageChannelId) {
+    this.db.prepare(`
+      UPDATE bewerbungen
+      SET message_id = ?, message_channel_id = ?
+      WHERE guild_id = ? AND application_id = ?
+    `).run(messageId, messageChannelId, guildId, applicationId);
+  }
+
+  // Abgelehnte Bewerbungen, bei denen die Ablehnungs-Rolle noch entfernt werden muss.
+  getRejectedBewerbungenPendingRemoval(guildId, now = Date.now()) {
+    return this.db.prepare(`
+      SELECT * FROM bewerbungen
+      WHERE guild_id = ?
+        AND status = 'rejected'
+        AND reject_role_removed_at IS NULL
+      ORDER BY reviewed_at ASC
+    `).all(guildId);
+  }
+
+  markBewerbungRejectRoleRemoved(guildId, applicationId, at = Date.now()) {
+    this.db.prepare(`
+      UPDATE bewerbungen
+      SET reject_role_removed_at = ?
+      WHERE guild_id = ? AND application_id = ? AND status = 'rejected'
+    `).run(at, guildId, applicationId);
+  }
+
+  // ----------------------------------------------------------------------
+  //  BEWERBUNGSSESSIONS  (laufendes DM-Gespräch, übersteht Neustarts)
+  // ----------------------------------------------------------------------
+
+  upsertBewerbungSession(guildId, userId, { currentIndex, answers }) {
+    this.db.prepare(`
+      INSERT INTO bewerbung_sessions (guild_id, user_id, current_index, answers_json, started_at)
+      VALUES (?, ?, ?, ?, ?)
+      ON CONFLICT(guild_id, user_id) DO UPDATE SET
+        current_index = excluded.current_index,
+        answers_json = excluded.answers_json
+    `).run(
+      guildId,
+      userId,
+      currentIndex,
+      JSON.stringify(answers ?? []),
+      Date.now()
+    );
+  }
+
+  getBewerbungSession(guildId, userId) {
+    const row = this.db.prepare(`
+      SELECT * FROM bewerbung_sessions WHERE guild_id = ? AND user_id = ?
+    `).get(guildId, userId);
+    if (!row) return null;
+
+    return {
+      guildId: row.guild_id,
+      userId: row.user_id,
+      currentIndex: Number(row.current_index) || 0,
+      answers: JSON.parse(row.answers_json || '[]'),
+      startedAt: Number(row.started_at) || 0
+    };
+  }
+
+  // Sucht eine laufende Bewerbungs-Session eines Nutzers über ALLE Server.
+  // Wird gebraucht, weil DM-Nachrichten keinem bestimmten Server zugeordnet sind.
+  getBewerbungSessionByUser(userId) {
+    const row = this.db.prepare(`
+      SELECT * FROM bewerbung_sessions WHERE user_id = ? ORDER BY started_at DESC LIMIT 1
+    `).get(userId);
+    if (!row) return null;
+
+    return {
+      guildId: row.guild_id,
+      userId: row.user_id,
+      currentIndex: Number(row.current_index) || 0,
+      answers: JSON.parse(row.answers_json || '[]'),
+      startedAt: Number(row.started_at) || 0
+    };
+  }
+
+  deleteBewerbungSession(guildId, userId) {
+    this.db.prepare(`
+      DELETE FROM bewerbung_sessions WHERE guild_id = ? AND user_id = ?
+    `).run(guildId, userId);
   }
 
   ensureRealEstateDefaults(guildId, properties) {
