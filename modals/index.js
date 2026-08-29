@@ -7,6 +7,7 @@ import { autoCheckRpState } from '../utils/serverStatus.js';
 import { trackStatusReport, publishStatusLeaderboard } from '../utils/statusLeaderboard.js';
 import { logger, sendLog } from '../utils/logger.js';
 import { formatGermanDateTime, parseGermanDateTime } from '../utils/time.js';
+import { finishBewerbungDecision } from '../utils/bewerbung.js';
 
 function hasAnyRole(member, roleIds = []) {
   return roleIds.some((roleId) => roleId && member.roles.cache.has(roleId));
@@ -311,6 +312,14 @@ const handlers = [
     name: 'ic_counter_modal',
     match: (customId) => customId === 'ic_counter_modal',
     execute: (interaction, runtime) => handleIcCounterModal(interaction, runtime)
+  },
+  {
+    name: 'bewerbung_decision_modal',
+    match: (customId) => customId.startsWith('bewerbung_decision_modal:'),
+    execute: (interaction, runtime) => {
+      const [, applicationId, action] = interaction.customId.split(':');
+      return finishBewerbungDecision(interaction, runtime, applicationId, action);
+    }
   }
 ];
 
