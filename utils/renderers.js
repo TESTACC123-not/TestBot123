@@ -41,28 +41,19 @@ function chunkText(lines, maxLength = 3800, separator = '\n') {
 
 function buildTeamListChunks(teamRoles, members, rows, maxLength = 3400) {
   const chunks = [];
-  let current = '';
   let memberCount = 0;
 
-  function pushLine(line) {
-    const candidate = current ? `${current}\n${line}` : line;
-    if (candidate.length > maxLength && current) {
-      chunks.push(current);
-      current = line;
-      return true;
-    }
-    current = candidate;
-    return false;
-  }
+  const memberArray = Array.isArray(members)
+    ? members
+    : Array.from(members.values());
+
+  // Jede Rolle als fertiger, abgeschlossener Textblock bauen (Nummerierung pro Rolle).
+  const roleBlocks = [];
 
   for (const teamRole of teamRoles) {
     if (!teamRole?.id) {
       continue;
     }
-
-    const memberArray = Array.isArray(members)
-      ? members
-      : Array.from(members.values());
 
     const roleMembers = memberArray
       .filter((member) => member.roles.cache.has(teamRole.id))
@@ -70,27 +61,56 @@ function buildTeamListChunks(teamRoles, members, rows, maxLength = 3400) {
 
     memberCount += roleMembers.length;
 
-    pushLine(`### <@&${teamRole.id}> \`•\` ${roleMembers.length}`);
-
     if (!roleMembers.length) {
-      pushLine('*Keine Inhaber*');
+      roleBlocks.push(`### <@&${teamRole.id}> \`•\` 0\n*Keine Inhaber*`);
       continue;
     }
 
     const padWidth = String(roleMembers.length).length;
-    roleMembers.forEach((member, index) => {
+    const lines = roleMembers.map((member, index) => {
       const roblox = rows.get(member.id)?.roblox_name;
       const number = String(index + 1).padStart(Math.max(padWidth, 2), '0');
       const robloxLabel = roblox ? `\`${roblox}\`` : '*kein Roblox-Name*';
-      const line = `\`${number}.\` <@${member.id}> — ${robloxLabel}`;
-
-      const brokeChunk = pushLine(line);
-      if (brokeChunk) {
-        current = `### <@&${teamRole.id}> \`•\` ${roleMembers.length} *(Fortsetzung)*\n${current}`;
-      }
+      return `\`${number}.\` <@${member.id}> — ${robloxLabel}`;
     });
+
+    const headerLine = `### <@&${teamRole.id}> \`•\` ${roleMembers.length}`;
+
+    // Eine sehr große Rolle darf über mehrere Nachrichten laufen, aber sauber
+    // nummeriert und mit eindeutigem Fortsetzungs-Kopf.
+    if (headerLine.length + lines.join('\n').length <= maxLength) {
+      roleBlocks.push([headerLine, ...lines].join('\n'));
+    } else {
+      let block = headerLine;
+      let headerCount = 0;
+      for (const line of lines) {
+        const candidate = block ? `${block}\n${line}` : line;
+        if (candidate.length > maxLength && block) {
+          roleBlocks.push(block);
+          headerCount += 1;
+          block = `### <@&${teamRole.id}> \`•\` ${roleMembers.length} *(Fortsetzung ${headerCount})*\n${line}`;
+        } else {
+          block = candidate;
+        }
+      }
+      if (block) {
+        roleBlocks.push(block);
+      }
+    }
   }
 
+  // Ganze Rollen-Blöcke in Nachrichten packen – kein Block wird mitten in einer
+  // Rolle getrennt.
+  let current = '';
+  for (const block of roleBlocks) {
+    const candidate = current ? `${current}\n${block}` : block;
+    if (candidate.length > maxLength && current) {
+      chunks.push(current);
+      current = block;
+    } else {
+      current = candidate;
+    }
+  }
   if (current) {
     chunks.push(current);
   }
