@@ -78,6 +78,25 @@ function normalizeArray(value) {
   return [];
 }
 
+// Wandelt die Team-Ping-Buttons in ein sauberes Array um.
+// Unterstützt einfache Strings "ROLLE_ID" und Objekte { label, emoji, roleId }.
+function normalizeTeamPings(pings = []) {
+  return pings
+    .filter(Boolean)
+    .map((ping, index) => {
+      if (typeof ping === 'string') {
+        return { label: `Ping ${index + 1}`, emoji: '', roleId: ping };
+      }
+
+      return {
+        label: String(ping.label ?? ping.name ?? `Ping ${index + 1}`).trim(),
+        emoji: String(ping.emoji ?? '').trim(),
+        roleId: String(ping.roleId ?? '').trim()
+      };
+    })
+    .filter((ping) => ping.roleId);
+}
+
 // Wandelt eine Liste von Fragen/Zeilen in ein Array sauberer Strings um.
 // Unterstützt sowohl einfache Strings als auch Objekte mit { question } / { label }.
 function normalizeStringList(value) {
@@ -388,6 +407,16 @@ export function loadConfig(baseDir = process.cwd()) {
         config.teamUpdate?.warnPingRoleId ??
         '',
       warnRoleIds: normalizeArray(config.teamUpdate?.warnRoleIds)
+    },
+
+    // Team-Ping-Panel: Buttons, die eine bestimmte Team-Rolle pingen.
+    teamPings: {
+      // Kanal, in dem das Panel gepostet wird.
+      channelId: config.teamPings?.channelId ?? '',
+      // Kanal, in dem die Ping-Nachricht erscheint (Standard: der Kanal, in dem geklickt wurde).
+      pingChannelId: config.teamPings?.pingChannelId ?? '',
+      // Liste der Buttons: { label, emoji, roleId }.
+      pings: normalizeTeamPings(config.teamPings?.pings)
     },
 
     // Verify-Fragen (werden neuen Mitgliedern beim Verifizieren gestellt).
