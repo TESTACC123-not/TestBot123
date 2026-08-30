@@ -20,7 +20,8 @@ import {
 } from '../utils/duty.js';
 import {
   startBewerbung,
-  openBewerbungDecisionModal
+  openBewerbungDecisionModal,
+  cancelBewerbung
 } from '../utils/bewerbung.js';
 
 function hasAnyRole(member, roleIds = []) {
@@ -590,6 +591,11 @@ const handlers = [
     name: 'bewerbung_start',
     match: (customId) => customId === 'bewerbung_start',
     execute: (interaction, runtime) => startBewerbung(interaction, runtime)
+  },
+  {
+    name: 'bewerbung_cancel',
+    match: (customId) => customId === 'bewerbung_cancel',
+    execute: (interaction, runtime) => cancelBewerbung(interaction, runtime)
   },
   {
     name: 'teamping',
