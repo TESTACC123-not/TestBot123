@@ -58,16 +58,78 @@ export function buildBewerbungDmQuestion(question, index, total) {
   const container = new ContainerBuilder()
     .setAccentColor(0x2ecc71)
     .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(`# 📝 Bewerbung – Frage ${index + 1}/${total}`),
+      new TextDisplayBuilder().setContent(`📝 **Bewerbung – Frage ${index + 1}/${total}**`),
       new TextDisplayBuilder().setContent(
-        `## ${question}\n\nSchreibe deine Antwort einfach als Nachricht in diesen Chat.`
+        `**${question}**`
       )
     )
     .addSeparatorComponents(
       new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small)
     )
     .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(footerLine(`Beantworte alle ${total} Fragen nacheinander.`))
+      new TextDisplayBuilder().setContent(footerLine(`Beantworte die Frage einfach als Nachricht in diesem Chat.`))
+    );
+
+  return { flags: MessageFlags.IsComponentsV2, components: [container] };
+}
+
+/**
+ * Bestätigung per DM, nachdem alle Fragen beantwortet wurden.
+ */
+export function buildBewerbungSubmittedPayload() {
+  const container = new ContainerBuilder()
+    .setAccentColor(0x2ecc71)
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent('✅ **Bewerbung erfolgreich abgesendet**'),
+      new TextDisplayBuilder().setContent(
+        'Danke für deine Bewerbung! Sie wurde übermittelt und wird nun geprüft. Du erhältst hier per Direktnachricht Bescheid, sobald eine Entscheidung getroffen wurde.'
+      )
+    )
+    .addSeparatorComponents(
+      new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small)
+    )
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(footerLine('München RP | VC - Bewerbungssystem'))
+    );
+
+  return { flags: MessageFlags.IsComponentsV2, components: [container] };
+}
+
+/**
+ * Entscheidung per DM an den Bewerber (Annahme oder Ablehnung).
+ */
+export function buildBewerbungDecisionDmPayload({ status, reason, rejectDurationHours }) {
+  const accepted = status === 'accepted';
+  const container = new ContainerBuilder()
+    .setAccentColor(accepted ? 0x2ecc71 : 0xe74c3c)
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        accepted ? '🎉 **Bewerbung angenommen**' : '❌ **Bewerbung abgelehnt**'
+      ),
+      new TextDisplayBuilder().setContent(
+        accepted
+          ? 'Herzlichen Glückwunsch, du bist jetzt Teil unseres Teams!'
+          : 'Leider wurde deine Bewerbung nicht angenommen.'
+      )
+    )
+    .addSeparatorComponents(
+      new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small)
+    )
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        [
+          `**Grund:** ${reason || '–'}`,
+          accepted
+            ? 'Deine Team-Rolle wurde dir zugewiesen.'
+            : `Die Ablehnungs-Rolle wird nach ${rejectDurationHours} Stunden automatisch wieder entfernt.`
+        ].join('\n\n')
+      )
+    )
+    .addSeparatorComponents(
+      new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small)
+    )
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(footerLine('München RP | VC - Bewerbungssystem'))
     );
 
   return { flags: MessageFlags.IsComponentsV2, components: [container] };
