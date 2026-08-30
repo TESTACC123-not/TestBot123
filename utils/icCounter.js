@@ -112,33 +112,38 @@ export function buildIcStatusPayload(state, config = {}) {
 
 /**
  * Ping-Nachricht (Kanal 2): pingt die feste Rolle und bietet den Button
- * zum Öffnen des Eingabefensters.
+ * zum Öffnen des Eingabefensters. Hat bereits jemand eine Spielerzahl
+ * gemeldet, wird der Button deaktiviert und der Melder angezeigt.
  */
-export function buildIcPingPayload(config = {}) {
+export function buildIcPingPayload(config = {}, state = null) {
   const cap = Math.max(1, Number(config.playerCap) || 50);
   const pingRoleId = config.pingRoleId ?? '';
-  const mentionText = pingRoleId ? `<@&${pingRoleId}>` : null;
+  const alreadyReported = Boolean(state?.reportedById && state?.playerCount !== undefined && state?.playerCount !== null);
 
   const container = new ContainerBuilder()
     .setAccentColor(0x5865f2);
 
-  if (mentionText) {
-    container.addTextDisplayComponents(new TextDisplayBuilder().setContent(mentionText));
+  if (!alreadyReported && pingRoleId) {
+    container.addTextDisplayComponents(new TextDisplayBuilder().setContent(`<@&${pingRoleId}>`));
   }
 
   container
     .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent('**📊 Spielerzahl melden**'),
+      new TextDisplayBuilder().setContent(alreadyReported ? '**📊 Spielerzahl bereits gemeldet**' : '**📊 Spielerzahl melden**'),
       new TextDisplayBuilder().setContent(
-        `Drücke auf den Button und gib ein, wie viele Spieler aktuell Ingame (IC) sind (max. ${cap}).`
+        alreadyReported
+          ? `Bereits gemeldet von <@${state.reportedById}>: **${state.playerCount}/${cap}**. Eine erneute Eingabe ist aktuell nicht möglich.`
+          : `Drücke auf den Button und gib ein, wie viele Spieler aktuell Ingame (IC) sind (max. ${cap}).`
       )
     )
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         fieldsToText([
-          { name: 'Wir brauchen deine Meldung!', value: 'Die aktuelle Spielerzahl wird im Status-Kanal angezeigt.' },
-          { name: 'Automatik', value: 'Diese Rolle wird alle konfigurierten Minuten gepingt, bis gemeldet wird.' }
+          alreadyReported
+            ? { name: 'Meldung abgeschlossen', value: `Die Spielerzahl wurde von <@${state.reportedById}> gemeldet. Der Status ist bereits aktualisiert.` }
+            : { name: 'Wir brauchen deine Meldung!', value: 'Die aktuelle Spielerzahl wird im Status-Kanal angezeigt.' },
+          { name: 'Automatik', value: alreadyReported ? 'Der Button wird aktiviert, sobald eine neue Meldung benötigt wird.' : 'Diese Rolle wird alle konfigurierten Minuten gepingt, bis gemeldet wird.' }
         ])
       )
     )
@@ -146,8 +151,9 @@ export function buildIcPingPayload(config = {}) {
       new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId('ic_counter_report')
-          .setLabel('Spielerzahl eingeben')
-          .setStyle(ButtonStyle.Primary)
+          .setLabel(alreadyReported ? 'Bereits gemeldet' : 'Spielerzahl eingeben')
+          .setStyle(alreadyReported ? ButtonStyle.Secondary : ButtonStyle.Primary)
+          .setDisabled(alreadyReported)
       )
     );
 
@@ -156,7 +162,7 @@ export function buildIcPingPayload(config = {}) {
     components: [container]
   };
 
-  if (mentionText && pingRoleId) {
+  if (!alreadyReported && pingRoleId) {
     payload.allowedMentions = { parse: [], roles: [pingRoleId], users: [], repliedUser: false };
   }
 
@@ -250,7 +256,8 @@ export async function sendIcPing(client, runtime) {
     }
   }
 
-  const payload = buildIcPingPayload(ic);
+  const state = getIcState(runtime.db, runtime.config.guildId);
+  const payload = buildIcPingPayload(ic, state);
   const sent = await channel.send(payload);
   runtime.icCounter = { ...(runtime.icCounter || {}), pingMessageId: sent.id };
   return sent;
