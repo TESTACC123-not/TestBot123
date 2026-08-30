@@ -21,7 +21,8 @@ import {
 import {
   startBewerbung,
   openBewerbungDecisionModal,
-  cancelBewerbung
+  cancelBewerbung,
+  withdrawBewerbung
 } from '../utils/bewerbung.js';
 
 function hasAnyRole(member, roleIds = []) {
@@ -596,6 +597,11 @@ const handlers = [
     name: 'bewerbung_cancel',
     match: (customId) => customId === 'bewerbung_cancel',
     execute: (interaction, runtime) => cancelBewerbung(interaction, runtime)
+  },
+  {
+    name: 'bewerbung_withdraw',
+    match: (customId) => customId === 'bewerbung_withdraw',
+    execute: (interaction, runtime) => withdrawBewerbung(interaction, runtime)
   },
   {
     name: 'teamping',
