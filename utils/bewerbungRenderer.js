@@ -28,7 +28,7 @@ export function buildBewerbungPanelPayload() {
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent('**Bewerbung**'),
       new TextDisplayBuilder().setContent(
-        'Du möchtest Teil unseres Teams werden? Dann starte deine Bewerbung über den Button. Die Fragen werden dir per Direktnachricht gestellt.'
+        'Du möchtest Teil unseres Teams werden? Dann starte deine Bewerbung über den Button. Die Fragen werden dir per Direktnachricht gestellt.\n\nHast du bereits eine offene oder laufende Bewerbung, kannst du sie jederzeit mit „Bewerbung zurückziehen“ beenden.'
       )
     )
     .addSeparatorComponents(
@@ -40,7 +40,12 @@ export function buildBewerbungPanelPayload() {
           .setCustomId('bewerbung_start')
           .setLabel('Bewerben')
           .setStyle(ButtonStyle.Primary)
-          .setEmoji('📝')
+          .setEmoji('📝'),
+        new ButtonBuilder()
+          .setCustomId('bewerbung_withdraw')
+          .setLabel('Bewerbung zurückziehen')
+          .setStyle(ButtonStyle.Danger)
+          .setEmoji('⏹️')
       )
     )
     .addTextDisplayComponents(
