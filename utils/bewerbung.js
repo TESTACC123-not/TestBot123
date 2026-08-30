@@ -1,9 +1,11 @@
 import { randomUUID } from 'node:crypto';
 import { MessageFlags, PermissionFlagsBits } from 'discord.js';
 import {
+  buildBewerbungDecisionDmPayload,
   buildBewerbungDmQuestion,
   buildBewerbungPanelPayload,
-  buildBewerbungResultPayload
+  buildBewerbungResultPayload,
+  buildBewerbungSubmittedPayload
 } from './bewerbungRenderer.js';
 import { logger, sendLog } from './logger.js';
 
@@ -244,6 +246,21 @@ async function finalizeBewerbung(client, runtime, userId, answers, guildId) {
   if (sent) {
     runtime.db.updateBewerbungMessage(runtime.config.guildId, applicationId, sent.id, channel.id);
   }
+
+  // Bestätigung an den Bewerber: Bewerbung wurde erfolgreich abgesendet.
+  try {
+    const applicant = await client.users.fetch(userId).catch(() => null);
+    if (applicant) {
+      const dm = await applicant.createDM().catch(() => null);
+      if (dm) {
+        await dm.send(buildBewerbungSubmittedPayload()).catch((error) => {
+          logger.warn('Bewerbungs-Bestätigung konnte nicht per DM gesendet werden.', error?.message ?? error);
+        });
+      }
+    }
+  } catch (error) {
+    logger.warn(`Bewerbungs-Bestätigung an ${userId} fehlgeschlagen.`, error?.message ?? error);
+  }
 }
 
 /* ============================================================
@@ -340,21 +357,19 @@ export async function finishBewerbungDecision(interaction, runtime, applicationI
     });
   }
 
-  // Den Bewerber per DM benachrichtigen.
+  // Den Bewerber per DM benachrichtigen (als Embed).
   try {
     const applicant = await interaction.client.users.fetch(freshRecord.user_id).catch(() => null);
     if (applicant) {
       const dm = await applicant.createDM().catch(() => null);
       if (dm) {
-        const headline = status === 'accepted'
-          ? '🎉 Herzlichen Glückwunsch, deine Bewerbung wurde **angenommen**!'
-          : 'Leider wurde deine Bewerbung **abgelehnt**.';
-        const note = status === 'accepted'
-          ? 'Du bist jetzt Teil des Teams.'
-          : `Die Ablehnungs-Rolle wird nach ${runtime.config.bewerbung.rejectDurationHours} Stunden automatisch wieder entfernt.`;
-        await dm.send({
-          content: `${headline}\n\n**Grund:** ${reason}\n\n${note}`
-        }).catch(() => null);
+        await dm.send(
+          buildBewerbungDecisionDmPayload({
+            status,
+            reason,
+            rejectDurationHours: runtime.config.bewerbung.rejectDurationHours
+          })
+        ).catch(() => null);
       }
     }
   } catch (error) {
