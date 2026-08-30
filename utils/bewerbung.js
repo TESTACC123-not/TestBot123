@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { MessageFlags, PermissionFlagsBits } from 'discord.js';
 import {
+  buildBewerbungCancelledPayload,
   buildBewerbungDecisionDmPayload,
   buildBewerbungDmQuestion,
   buildBewerbungPanelPayload,
@@ -203,6 +204,38 @@ export async function handleBewerbungDmMessage(message, runtime) {
   return true;
 }
 
+/* ============================================================
+ * BEWERBUNG ABBRECHEN (Button im Fragen-DM)
+ * ============================================================ */
+
+export async function cancelBewerbung(interaction, runtime) {
+  const userId = interaction.user.id;
+  const session = runtime.db.getBewerbungSessionByUser(userId);
+
+  if (!session) {
+    return replyEphemeral(interaction, 'Du hast aktuell keine laufende Bewerbung, die abgebrochen werden kann.');
+  }
+
+  runtime.db.deleteBewerbungSession(session.guildId, userId);
+
+  // Den Abbrechen-Button auf der aktuellen Frage deaktivieren.
+  if (interaction.message?.id) {
+    interaction.message.edit({ components: [] }).catch(() => null);
+  }
+
+  // Bestätigung als Embed in die DM senden.
+  try {
+    const dm = await interaction.user.createDM().catch(() => null);
+    if (dm) {
+      await dm.send(buildBewerbungCancelledPayload()).catch(() => null);
+    }
+  } catch (error) {
+    logger.warn(`Abbruch-Bestätigung an ${userId} fehlgeschlagen.`, error?.message ?? error);
+  }
+
+  return replyEphemeral(interaction, 'Deine Bewerbung wurde **abgebrochen** und verworfen.');
+}
+
 async function finalizeBewerbung(client, runtime, userId, answers, guildId) {
   const applicationId = randomUUID();
   const createdAt = Date.now();
@@ -230,10 +263,12 @@ async function finalizeBewerbung(client, runtime, userId, answers, guildId) {
     return;
   }
 
-  const payload = buildBewerbungResultPayload({ record, questions: runtime.config.bewerbung.questions });
-  const pingText = pingRoleId ? `\n\n<@&${pingRoleId}> – eine neue Bewerbung ist da!` : '';
+  const payload = buildBewerbungResultPayload({
+    record,
+    questions: runtime.config.bewerbung.questions,
+    pingRoleId
+  });
   const sent = await channel.send({
-    content: pingText || undefined,
     ...payload,
     allowedMentions: pingRoleId
       ? { parse: [], roles: [pingRoleId], users: [] }
