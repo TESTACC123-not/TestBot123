@@ -236,6 +236,58 @@ export async function cancelBewerbung(interaction, runtime) {
   return replyEphemeral(interaction, 'Deine Bewerbung wurde **abgebrochen** und verworfen.');
 }
 
+/* ============================================================
+ * OFFENE BEWERBUNG ZURÜCKZIEHEN (Button am Panel)
+ * ============================================================ */
+
+export async function withdrawBewerbung(interaction, runtime) {
+  const guildId = runtime.config.guildId;
+  const userId = interaction.user.id;
+
+  // 1) Eine eingereichte, offene Bewerbung zurückziehen.
+  const open = runtime.db.getOpenBewerbungByUser(guildId, userId);
+  if (open) {
+    // Die bereits gepostete Bewerbungs-Nachricht im Ergebnis-Kanal löschen.
+    if (open.message_id && open.message_channel_id) {
+      try {
+        const ch = await interaction.client.channels.fetch(open.message_channel_id).catch(() => null);
+        if (ch?.isTextBased?.()) {
+          const msg = await ch.messages.fetch(open.message_id).catch(() => null);
+          if (msg) await msg.delete().catch(() => null);
+        }
+      } catch (error) {
+        logger.warn(`Bewerbungs-Nachricht ${open.message_id} konnte nicht gelöscht werden.`, error?.message ?? error);
+      }
+    }
+
+    runtime.db.withdrawBewerbung(guildId, open.application_id);
+
+    try {
+      const dm = await interaction.user.createDM().catch(() => null);
+      if (dm) await dm.send(buildBewerbungCancelledPayload()).catch(() => null);
+    } catch (error) {
+      logger.warn(`Rückzug-Bestätigung an ${userId} fehlgeschlagen.`, error?.message ?? error);
+    }
+
+    return replyEphemeral(interaction, 'Deine offene Bewerbung wurde **zurückgezogen**. Du kannst dich jederzeit neu bewerben.');
+  }
+
+  // 2) Eine laufende Bewerbung (Fragen-DM) abbrechen.
+  const session = runtime.db.getBewerbungSession(guildId, userId);
+  if (session) {
+    runtime.db.deleteBewerbungSession(guildId, userId);
+    try {
+      const dm = await interaction.user.createDM().catch(() => null);
+      if (dm) await dm.send(buildBewerbungCancelledPayload()).catch(() => null);
+    } catch (error) {
+      logger.warn(`Abbruch-Bestätigung an ${userId} fehlgeschlagen.`, error?.message ?? error);
+    }
+    return replyEphemeral(interaction, 'Deine laufende Bewerbung wurde **abgebrochen**.');
+  }
+
+  return replyEphemeral(interaction, 'Du hast aktuell keine offene oder laufende Bewerbung, die du zurückziehen könntest.');
+}
+
 async function finalizeBewerbung(client, runtime, userId, answers, guildId) {
   const applicationId = randomUUID();
   const createdAt = Date.now();
