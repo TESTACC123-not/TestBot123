@@ -425,9 +425,23 @@ export function buildAbsencePanelPayload() {
 
 export function buildTeamListEmbeds({ guild, config, rows, members }) {
   const teamRoles = config.roles.teamRoles.filter((teamRole) => teamRole?.id);
+
+  // Zusätzlich alle konfigurierten Support-Rollen in die Teamliste aufnehmen,
+  // damit kein Support-Mitglied fehlt, nur weil es nicht in teamRoles steht.
+  const supportRoleIds = [...new Set([
+    ...(config.roles.supporterRoleIds ?? []),
+    ...(config.support?.supporterRoleIds ?? [])
+  ].filter(Boolean))];
+
+  const configuredIds = new Set(teamRoles.map((teamRole) => teamRole.id));
+  const extraSupportRoles = supportRoleIds
+    .filter((id) => !configuredIds.has(id))
+    .map((id) => ({ id }));
+
+  const allRoles = [...teamRoles, ...extraSupportRoles];
   const timestamp = new Date().toLocaleString('de-DE');
 
-  if (!teamRoles.length) {
+  if (!allRoles.length) {
     const container = new ContainerBuilder()
       .setAccentColor(0x3498db)
       .addTextDisplayComponents(
@@ -440,7 +454,7 @@ export function buildTeamListEmbeds({ guild, config, rows, members }) {
     return [{ flags: MessageFlags.IsComponentsV2, components: [container] }];
   }
 
-  const { chunks, memberCount } = buildTeamListChunks(teamRoles, members, rows);
+  const { chunks, memberCount } = buildTeamListChunks(allRoles, members, rows);
   const totalParts = chunks.length;
 
   return chunks.map((chunk, index) => {
