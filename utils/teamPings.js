@@ -89,7 +89,7 @@ export function isTeamPingAllowed(member, runtime) {
   return hasAnyRole(member, teamRoleIds);
 }
 
-function getWaitingRoomChannelId(runtime, waitingRoomType) {
+export function getWaitingRoomChannelId(runtime, waitingRoomType) {
   if (!waitingRoomType) {
     return '';
   }
@@ -106,12 +106,12 @@ async function fetchVoiceChannel(guild, channelId) {
 }
 
 /**
- * Löst den Klick eines Team-Ping-Buttons aus (Umschalt-Modul).
- *  - Hat das Mitglied die Rolle noch nicht: Rolle wird VERGEBEN. Ist der Button mit
- *    einem Warteraum verknüpft (waitingRoomType), wird der Benutzer in diesen Kanal
- *    verschoben (wie im Support-/Wartebereich-System).
- *  - Hat das Mitglied die Rolle schon: Rolle wird ENTFERNT. Bei verknüpftem Warteraum
- *    wird der Benutzer aus dem Call gekickt.
+ * Löst den Klick eines Team-Ping-Buttons aus (Umschalt-Modul, wie das Support-System).
+ *  - Der Benutzer wird NICHT in eine Rolle gesetzt.
+ *  - Aktivieren (erster Klick): Der Benutzer wird in den Warteraum des verknüpften
+ *    Bereichs verschoben (wie beim Übernehmen eines Supportfalls).
+ *  - Deaktivieren (zweiter Klick): Der Benutzer wird aus dem Call gekickt
+ *    (wie beim Beenden eines Supportfalls).
  */
 export async function triggerTeamPing(interaction, runtime, roleId) {
   const ping = getTeamPingByRoleId(runtime.config, roleId);
@@ -126,33 +126,27 @@ export async function triggerTeamPing(interaction, runtime, roleId) {
 
   const waitingRoomType = ping.waitingRoomType ?? '';
   const waitingChannelId = getWaitingRoomChannelId(runtime, waitingRoomType);
-  const hasRole = member.roles.cache.has(roleId);
-
-  try {
-    if (hasRole) {
-      // AUS: Rolle entfernen, aus dem Call kicken (falls Warteraum verknüpft).
-      await member.roles.remove(roleId, 'Team-Ping (deaktiviert)');
-      if (waitingRoomType && waitingChannelId) {
-        await member.voice.disconnect().catch((error) => {
-          logger.warn('Team-Ping: Benutzer konnte nicht aus dem Call gekickt werden.', error?.message ?? error);
-        });
-      }
-      return null;
-    }
-
-    // AN: Rolle vergeben, in den Warteraum verschieben (falls verknüpft).
-    await member.roles.add(roleId, 'Team-Ping (aktiviert)');
-    if (waitingRoomType && waitingChannelId) {
-      const channel = await fetchVoiceChannel(interaction.guild, waitingChannelId);
-      if (channel) {
-        await member.voice.setChannel(channel.id).catch((error) => {
-          logger.warn(`Team-Ping: Benutzer konnte nicht in Warteraum ${waitingChannelId} verschoben werden.`, error?.message ?? error);
-        });
-      }
-    }
-    return null;
-  } catch (error) {
-    logger.warn('Team-Ping: Rollenwechsel fehlgeschlagen.', error?.message ?? error);
-    return 'Der Rollenwechsel konnte nicht durchgeführt werden. Prüfe die Bot-Berechtigungen.';
+  if (!waitingRoomType || !waitingChannelId) {
+    return 'Dieser Button ist mit keinem Warteraum verknüpft. Trage `waitingRoomType` und den Warteraum-Kanal in der config.json ein.';
   }
+
+  const isInWaitingRoom = member.voice?.channelId === waitingChannelId;
+
+  if (isInWaitingRoom) {
+    // AUS: Aus dem Call kicken.
+    await member.voice.disconnect().catch((error) => {
+      logger.warn('Team-Ping: Benutzer konnte nicht aus dem Call gekickt werden.', error?.message ?? error);
+    });
+    return null;
+  }
+
+  // AN: In den Warteraum verschieben.
+  const channel = await fetchVoiceChannel(interaction.guild, waitingChannelId);
+  if (!channel) {
+    return `Der Warteraum-Kanal ${waitingChannelId} konnte nicht gefunden werden.`;
+  }
+  await member.voice.setChannel(channel.id).catch((error) => {
+    logger.warn(`Team-Ping: Benutzer konnte nicht in Warteraum ${waitingChannelId} verschoben werden.`, error?.message ?? error);
+  });
+  return null;
 }
