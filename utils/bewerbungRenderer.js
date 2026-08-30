@@ -68,6 +68,15 @@ export function buildBewerbungDmQuestion(question, index, total) {
     )
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(footerLine(`Beantworte die Frage einfach als Nachricht in diesem Chat.`))
+    )
+    .addActionRowComponents(
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId('bewerbung_cancel')
+          .setLabel('Bewerbung abbrechen')
+          .setStyle(ButtonStyle.Danger)
+          .setEmoji('⏹️')
+      )
     );
 
   return { flags: MessageFlags.IsComponentsV2, components: [container] };
@@ -83,6 +92,28 @@ export function buildBewerbungSubmittedPayload() {
       new TextDisplayBuilder().setContent('✅ **Bewerbung erfolgreich abgesendet**'),
       new TextDisplayBuilder().setContent(
         'Danke für deine Bewerbung! Sie wurde übermittelt und wird nun geprüft. Du erhältst hier per Direktnachricht Bescheid, sobald eine Entscheidung getroffen wurde.'
+      )
+    )
+    .addSeparatorComponents(
+      new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small)
+    )
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(footerLine('München RP | VC - Bewerbungssystem'))
+    );
+
+  return { flags: MessageFlags.IsComponentsV2, components: [container] };
+}
+
+/**
+ * Bestätigung per DM, dass die Bewerbung abgebrochen wurde.
+ */
+export function buildBewerbungCancelledPayload() {
+  const container = new ContainerBuilder()
+    .setAccentColor(0xe74c3c)
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent('⏹️ **Bewerbung abgebrochen**'),
+      new TextDisplayBuilder().setContent(
+        'Deine Bewerbung wurde abgebrochen und verworfen. Falls du dich später erneut bewerben möchtest, drücke einfach wieder auf den „Bewerben“-Button im Bewerbungs-Kanal.'
       )
     )
     .addSeparatorComponents(
@@ -139,8 +170,9 @@ export function buildBewerbungDecisionDmPayload({ status, reason, rejectDuration
  * Die fertige Bewerbung, die im Ergebnis-Kanal erscheint (mit Ping + Annehmen/Ablehnen).
  * record: der Bewerbungs-Datensatz (mit answers_json etc.)
  * questions: die Fragenliste (um die Antworten mit den Fragen zu verknüpfen).
+ * pingRoleId: optionale Rolle, die bei einer neuen Bewerbung gepinnt wird.
  */
-export function buildBewerbungResultPayload({ record, questions, reviewerName = null }) {
+export function buildBewerbungResultPayload({ record, questions, reviewerName = null, pingRoleId = null }) {
   let answers = [];
   try {
     answers = Array.isArray(record.answers_json)
@@ -165,6 +197,11 @@ export function buildBewerbungResultPayload({ record, questions, reviewerName = 
   const accent = record.status === 'accepted' ? 0x2ecc71 : record.status === 'rejected' ? 0xe74c3c : 0xf39c12;
 
   const container = new ContainerBuilder().setAccentColor(accent);
+  if (pingRoleId) {
+    container.addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(`<@&${pingRoleId}> – eine neue Bewerbung ist da!`)
+    );
+  }
   container
     .addTextDisplayComponents(new TextDisplayBuilder().setContent('**Neue Bewerbung**'))
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small))
