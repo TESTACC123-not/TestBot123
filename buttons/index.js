@@ -1,6 +1,6 @@
 import { ActionRowBuilder, ModalBuilder, MessageFlags, PermissionFlagsBits, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { buildFlyRequestPayload, buildSupportCaseChannelMessage } from '../utils/renderers.js';
-import { isTeamPingAllowed, triggerTeamPing } from '../utils/teamPings.js';
+import { getWaitingRoomChannelId, isTeamPingAllowed, triggerTeamPing } from '../utils/teamPings.js';
 import * as trainerDashboard from '../utils/trainerDashboard.js';
 import {
   refreshActiveAbsencePanel,
@@ -444,6 +444,11 @@ async function handleIcCounterOpen(interaction, runtime) {
     return replyEphemeral(interaction, 'Der IC-Counter ist in der config.json noch nicht konfiguriert.');
   }
 
+  const state = runtime.db.getSetting ? JSON.parse(runtime.db.getSetting(`icCounter:${runtime.config.guildId}`) || 'null') : null;
+  if (state?.reportedById && state?.playerCount !== undefined && state?.playerCount !== null) {
+    return replyEphemeral(interaction, `Die Spielerzahl wurde bereits von <@${state.reportedById}> gemeldet (**${state.playerCount}**). Eine erneute Eingabe ist aktuell nicht möglich.`);
+  }
+
   await interaction.showModal(buildIcCounterModal(ic));
 }
 
@@ -484,9 +489,14 @@ async function handleTeamPing(interaction, runtime, roleId) {
     return interaction.editReply({ content: `❌ ${error}` }).catch(() => null);
   }
 
-  const hasRole = interaction.member?.roles?.cache?.has(roleId);
+  const ping = runtime.config?.teamPings?.find((p) => p.roleId === roleId);
+  const waitingChannelId = getWaitingRoomChannelId(runtime, ping?.waitingRoomType ?? '');
+  const nowInWaitingRoom = waitingChannelId && interaction.member?.voice?.channelId === waitingChannelId;
+
   return interaction.editReply({
-    content: hasRole ? '✅ Rolle wurde zugewiesen.' : '✅ Rolle wurde entfernt.'
+    content: nowInWaitingRoom
+      ? '✅ Du wurdest in den Warteraum verschoben.'
+      : '✅ Du wurdest aus dem Call gekickt.'
   }).catch(() => null);
 }
 
