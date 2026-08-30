@@ -58,12 +58,17 @@ export function buildBewerbungDmQuestion(question, index, total) {
   const container = new ContainerBuilder()
     .setAccentColor(0x2ecc71)
     .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(`**Bewerbung – Frage ${index + 1}/${total}**`)
+      new TextDisplayBuilder().setContent(`# 📝 Bewerbung – Frage ${index + 1}/${total}`),
+      new TextDisplayBuilder().setContent(
+        `## ${question}\n\nSchreibe deine Antwort einfach als Nachricht in diesen Chat.`
+      )
     )
     .addSeparatorComponents(
       new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small)
     )
-    .addTextDisplayComponents(new TextDisplayBuilder().setContent(question));
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(footerLine(`Beantworte alle ${total} Fragen nacheinander.`))
+    );
 
   return { flags: MessageFlags.IsComponentsV2, components: [container] };
 }
