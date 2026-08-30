@@ -178,11 +178,18 @@ export function buildBewerbungDecisionDmPayload({ status, reason, rejectDuration
  * pingRoleId: optionale Rolle, die bei einer neuen Bewerbung gepinnt wird.
  */
 export function buildBewerbungResultPayload({ record, questions, reviewerName = null, pingRoleId = null }) {
+  // record kann ein DB-Datensatz (snake_case) oder ein frisches Objekt (camelCase) sein.
+  const applicationId = record.application_id ?? record.applicationId;
+  const userId = record.user_id ?? record.userId;
+  const createdAt = record.created_at ?? record.createdAt;
+  const status = record.status;
+  const reviewerId = record.reviewer_id ?? record.reviewerId;
+  const reviewReason = record.review_reason ?? record.reviewReason;
+
   let answers = [];
   try {
-    answers = Array.isArray(record.answers_json)
-      ? record.answers_json
-      : JSON.parse(record.answers_json || '[]');
+    const rawAnswers = record.answers_json ?? record.answers;
+    answers = Array.isArray(rawAnswers) ? rawAnswers : JSON.parse(rawAnswers || '[]');
   } catch (_) {
     answers = [];
   }
@@ -193,13 +200,13 @@ export function buildBewerbungResultPayload({ record, questions, reviewerName = 
   });
 
   const fields = [
-    { name: 'Bewerber', value: `<@${record.user_id}>` },
-    { name: 'Eingereicht am', value: formatGermanDateTime(record.created_at) },
+    { name: 'Bewerber', value: userId ? `<@${userId}>` : '–' },
+    { name: 'Eingereicht am', value: createdAt ? formatGermanDateTime(createdAt) : '–' },
     { name: 'Antworten', value: qaLines.join('\n\n') }
   ];
 
-  const isReviewed = record.status === 'accepted' || record.status === 'rejected';
-  const accent = record.status === 'accepted' ? 0x2ecc71 : record.status === 'rejected' ? 0xe74c3c : 0xf39c12;
+  const isReviewed = status === 'accepted' || status === 'rejected';
+  const accent = status === 'accepted' ? 0x2ecc71 : status === 'rejected' ? 0xe74c3c : 0xf39c12;
 
   const container = new ContainerBuilder().setAccentColor(accent);
   if (pingRoleId) {
@@ -221,9 +228,9 @@ export function buildBewerbungResultPayload({ record, questions, reviewerName = 
       new TextDisplayBuilder().setContent(
         [
           '',
-          `**Entscheidung: ${record.status === 'accepted' ? 'Angenommen ✅' : 'Abgelehnt ❌'}**`,
-          `**Bearbeitet von:** ${reviewerName ? reviewerName : `<@${record.reviewer_id}>`}`,
-          `**Grund:** ${record.review_reason ? record.review_reason : '–'}`
+          `**Entscheidung: ${status === 'accepted' ? 'Angenommen ✅' : 'Abgelehnt ❌'}**`,
+          `**Bearbeitet von:** ${reviewerName ? reviewerName : reviewerId ? `<@${reviewerId}>` : '–'}`,
+          `**Grund:** ${reviewReason ? reviewReason : '–'}`
         ].join('\n')
       )
     );
@@ -231,11 +238,11 @@ export function buildBewerbungResultPayload({ record, questions, reviewerName = 
     const row = new ActionRowBuilder();
     row.addComponents(
       new ButtonBuilder()
-        .setCustomId(`bewerbung_accept:${record.application_id}`)
+        .setCustomId(`bewerbung_accept:${applicationId}`)
         .setLabel('Annehmen')
         .setStyle(ButtonStyle.Success),
       new ButtonBuilder()
-        .setCustomId(`bewerbung_reject:${record.application_id}`)
+        .setCustomId(`bewerbung_reject:${applicationId}`)
         .setLabel('Ablehnen')
         .setStyle(ButtonStyle.Danger)
     );
