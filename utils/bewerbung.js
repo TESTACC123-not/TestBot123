@@ -57,13 +57,34 @@ async function tryOpenDm(user) {
  * PANEL
  * ============================================================ */
 
+function isValidChannelId(id) {
+  return typeof id === 'string' && /^\d{10,25}$/.test(id);
+}
+
 export async function refreshBewerbungPanel(client, runtime) {
   const { panels } = runtime.config;
   const channelId = panels.bewerbung?.channelId || runtime.config.bewerbung?.panelChannelId;
-  if (!channelId) return null;
+  if (!channelId) {
+    logger.warn(
+      'Bewerbungs-Panel wird nicht gepostet: Kein Kanal konfiguriert. Setze in der config.json `bewerbung.panelChannelId` (oder `panels.bewerbung.channelId`) auf die Kanal-ID des Kanals mit dem "Bewerben"-Button.'
+    );
+    return null;
+  }
+
+  if (!isValidChannelId(channelId)) {
+    logger.warn(
+      `Bewerbungs-Panel wird nicht gepostet: Die Kanal-ID "${channelId}" ist kein gültiger Discord-Kanal. Trage in der config.json unter \`bewerbung.panelChannelId\` eine echte Kanal-ID ein (nur Ziffern).`
+    );
+    return null;
+  }
 
   const channel = await client.channels.fetch(channelId).catch(() => null);
-  if (!channel?.isTextBased?.() || channel.isDMBased?.()) return null;
+  if (!channel?.isTextBased?.() || channel.isDMBased?.()) {
+    logger.warn(
+      `Bewerbungs-Panel wird nicht gepostet: Der Kanal ${channelId} konnte nicht gefunden werden. Prüfe, ob \`bewerbung.panelChannelId\` die richtige Kanal-ID ist.`
+    );
+    return null;
+  }
 
   const stored = runtime.db.getPanelMessage('bewerbung');
   const candidateMessageId = stored?.message_id || panels.bewerbung?.messageId;
@@ -81,6 +102,7 @@ export async function refreshBewerbungPanel(client, runtime) {
   try {
     const sent = await channel.send(payload);
     runtime.db.upsertPanelMessage('bewerbung', runtime.config.guildId, channel.id, sent.id);
+    logger.info('Bewerbungs-Panel wurde gepostet/aktualisiert.');
     return sent;
   } catch (error) {
     logger.error('Bewerbungs-Panel konnte nicht gesendet werden.', error);
