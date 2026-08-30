@@ -837,6 +837,14 @@ export class BotDatabase {
     `).get(guildId, userId) ?? null;
   }
 
+  withdrawBewerbung(guildId, applicationId) {
+    const result = this.db.prepare(`
+      DELETE FROM bewerbungen
+      WHERE guild_id = ? AND application_id = ? AND status = 'open'
+    `).run(guildId, applicationId);
+    return result.changes === 1;
+  }
+
   reviewBewerbung(guildId, applicationId, { status, reviewerId, reviewReason }) {
     const result = this.db.prepare(`
       UPDATE bewerbungen
