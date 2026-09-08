@@ -62,6 +62,12 @@ export function saveIcState(db, guildId, data) {
   db.setSetting(`icCounter:${guildId}`, JSON.stringify(data));
 }
 
+// Löscht die letzte Meldung, damit beim Start eines neuen Tages wieder frisch
+// nach der aktuellen Spielerzahl gefragt wird (statt die alte „bereits gemeldet“-Ansicht zu zeigen).
+export function clearIcState(db, guildId) {
+  db.setSetting(`icCounter:${guildId}`, null);
+}
+
 /**
  * Status-Nachricht (Kanal 1): zeigt immer den aktuell gemeldeten Wert,
  * wer ihn gemeldet hat und den berechneten Status.
@@ -306,6 +312,7 @@ export const icCounterHandle = {
   stopIcCounterLoop,
   getIcState,
   saveIcState,
+  clearIcState,
   buildIcStatusPayload,
   buildIcPingPayload
 };
