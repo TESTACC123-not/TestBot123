@@ -186,8 +186,16 @@ async function handleSupportTake(interaction, runtime, caseId) {
 
   // Beim Übernehmen wird der Hilfesuchende in den Voice-Channel des Supporters
   // verschoben – und zwar nur dorthin, wo der Supporter gerade selbst sitzt.
-  // Separate „angenommen“/„beenden“-Voice-Räume werden dafür nicht gebraucht.
-  const targetVoiceChannelId = interaction.member?.voice?.channelId || '';
+  // Den Supporter frisch laden, damit die Voice-Daten nicht veraltet sind.
+  const supporter = await interaction.guild.members.fetch(interaction.user.id).catch(() => null);
+  let targetVoiceChannelId = supporter?.voice?.channelId || '';
+  // Falls der Supporter gerade nicht selbst in einem Call sitzt, den konfigurierten
+  // Bearbeitungs-Raum der Support-Area als Ziel verwenden, damit der Wartende trotzdem
+  // zugeordnet wird.
+  if (!targetVoiceChannelId) {
+    targetVoiceChannelId = runtime.config.duty?.areas?.support?.activeChannelId || '';
+  }
+
   if (targetVoiceChannelId) {
     const member = await interaction.guild.members.fetch(updatedCase.user_id).catch(() => null);
     if (member?.voice?.channelId) {
