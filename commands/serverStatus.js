@@ -3,7 +3,7 @@ import {
   PermissionFlagsBits,
   SlashCommandBuilder
 } from 'discord.js';
-import { startIcCounterLoop } from '../utils/icCounter.js';
+import { startIcCounterLoop, clearIcState } from '../utils/icCounter.js';
 import { setRpState, getRpState, sendServerPushAnnouncement } from '../utils/serverStatus.js';
 import { publishStatusLeaderboard } from '../utils/statusLeaderboard.js';
 
@@ -46,8 +46,10 @@ export default {
     const subcommand = interaction.options.getSubcommand();
 
     if (subcommand === 'start') {
-      // Neuer Tag beginnt -> RP-Modus auf "live" setzen und Ping-Schleife neu starten.
+      // Neuer Tag beginnt -> RP-Modus auf "live" setzen, alte Meldung löschen und
+      // Ping-Schleife neu starten, damit das Team wieder frisch gefragt wird.
       setRpState(runtime.db, runtime.config.guildId, 'live');
+      clearIcState(runtime.db, runtime.config.guildId);
 
       let pushInfo = '';
       try {
