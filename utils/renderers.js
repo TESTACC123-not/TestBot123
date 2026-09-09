@@ -426,16 +426,11 @@ export function buildAbsencePanelPayload() {
 export function buildTeamListEmbeds({ guild, config, rows, members }) {
   const teamRoles = config.roles.teamRoles.filter((teamRole) => teamRole?.id);
 
-  // Zusätzlich alle Support- und Dienst-Rollen automatisch in die Teamliste
-  // aufnehmen, damit kein Teammitglied fehlt, nur weil es nicht in teamRoles steht.
-  const dutyRoleIds = Object.values(config.duty?.areas ?? {})
-    .map((area) => area?.roleId)
-    .filter(Boolean);
-
+  // Zusätzlich alle Support-Rollen automatisch in die Teamliste aufnehmen,
+  // damit kein Support-Mitglied fehlt, nur weil es nicht in teamRoles steht.
   const autoTeamRoleIds = [...new Set([
     ...(config.roles.supporterRoleIds ?? []),
-    ...(config.support?.supporterRoleIds ?? []),
-    ...dutyRoleIds
+    ...(config.support?.supporterRoleIds ?? [])
   ].filter(Boolean))];
 
   const configuredIds = new Set(teamRoles.map((teamRole) => teamRole.id));
