@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { formatGermanDateTime } from './time.js';
 import {
   AttachmentBuilder,
   ContainerBuilder,
@@ -64,7 +65,7 @@ export function buildWelcomeCard(member, template) {
 
   container.addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small));
   container.addTextDisplayComponents(
-    new TextDisplayBuilder().setContent(`-# Echo RP | VC · Willkommen · ${new Date().toLocaleString('de-DE')}`)
+    new TextDisplayBuilder().setContent(`-# Echo RP | VC · Willkommen · ${formatGermanDateTime(Date.now())}`)
   );
 
   return {
@@ -105,7 +106,7 @@ export function buildGoodbyeCard(member, template) {
 
   container.addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small));
   container.addTextDisplayComponents(
-    new TextDisplayBuilder().setContent(`-# Echo RP | VC · Auf Wiedersehen · ${new Date().toLocaleString('de-DE')}`)
+    new TextDisplayBuilder().setContent(`-# Echo RP | VC · Auf Wiedersehen · ${formatGermanDateTime(Date.now())}`)
   );
 
   return {
