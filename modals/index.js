@@ -22,8 +22,8 @@ function isAdmin(member) {
 
 function isStaff(member, runtime) {
   const roleIds = [
-    ...runtime.config.support.supporterRoleIds,
-    ...runtime.config.roles.supporterRoleIds
+    ...(runtime.config.support?.supporterRoleIds ?? []),
+    ...(runtime.config.roles?.supporterRoleIds ?? [])
   ];
 
   return isAdmin(member) || hasAnyRole(member, roleIds);
@@ -31,16 +31,16 @@ function isStaff(member, runtime) {
 
 function isFlyReviewer(member, runtime) {
   const roleIds = [
-    ...runtime.config.roles.flyReviewerRoleIds,
-    ...runtime.config.support.supporterRoleIds,
-    ...runtime.config.roles.supporterRoleIds
+    ...(runtime.config.roles?.flyReviewerRoleIds ?? []),
+    ...(runtime.config.support?.supporterRoleIds ?? []),
+    ...(runtime.config.roles?.supporterRoleIds ?? [])
   ];
 
   return isAdmin(member) || hasAnyRole(member, roleIds);
 }
 
 function isTeamMember(member, runtime) {
-  return isAdmin(member) || isStaff(member, runtime) || hasAnyRole(member, runtime.config.roles.teamRoles.map((role) => role.id));
+  return isAdmin(member) || isStaff(member, runtime) || hasAnyRole(member, (runtime.config.roles?.teamRoles ?? []).map((role) => role.id));
 }
 
 async function replyEphemeral(interaction, content) {
@@ -99,10 +99,6 @@ async function handleVerifyModal(interaction, runtime) {
 }
 
 async function handleFlyModal(interaction, runtime) {
-  if (!isTeamMember(interaction.member, runtime)) {
-    return replyEphemeral(interaction, 'Du bist für diesen Antrag nicht berechtigt.');
-  }
-
   const displayName = interaction.fields.getTextInputValue('fly_display_name')?.trim();
 
   if (!displayName) {
@@ -114,13 +110,10 @@ async function handleFlyModal(interaction, runtime) {
     return replyEphemeral(interaction, 'Es wurde kein Roblox-Name gespeichert.');
   }
 
+  // Eine Teamrolle ist nicht mehr Pflicht: ohne passende Rolle wird der Anzeigename als Nametag genutzt.
   const teamRole = resolveTeamRoleForMember(interaction.member, runtime.config);
   const resolvedNametag = resolveNametagForMember(interaction.member, runtime.config, runtime.nametags, displayName);
-  const nametag = resolvedNametag.nametag;
-
-  if (!teamRole || !nametag) {
-    return replyEphemeral(interaction, 'Für diesen Antrag ist keine passende Teamrolle oder kein Nametag konfiguriert.');
-  }
+  const nametag = resolvedNametag.nametag || displayName;
 
   const requestId = randomUUID();
   const record = {
@@ -130,8 +123,8 @@ async function handleFlyModal(interaction, runtime) {
     displayName,
     reason: '',
     robloxName: roblox.roblox_name,
-    teamRoleId: teamRole.id,
-    rank: teamRole.label ?? null,
+    teamRoleId: teamRole?.id ?? null,
+    rank: teamRole?.label ?? null,
     nametag,
     createdAt: Date.now(),
     status: 'open',
@@ -147,7 +140,7 @@ async function handleFlyModal(interaction, runtime) {
   runtime.db.createFlyRequest(record);
   const message = await targetChannel.send(buildFlyRequestPayload({
     // Ping statt der generischen On-Duty-Rolle: die Teamrolle des Antrags (Rolle für den Anzeigenamen).
-    pingRoleId: record.teamRoleId || runtime.config.roles.onDutyRoleId,
+    pingRoleId: record.teamRoleId || runtime.config.roles?.onDutyRoleId || (runtime.config.roles?.flyReviewerRoleIds ?? [])[0] || (runtime.config.roles?.supporterRoleIds ?? [])[0] || null,
     requestRecord: {
       request_id: record.requestId,
       user_id: record.userId,
@@ -178,10 +171,6 @@ async function handleFlyModal(interaction, runtime) {
 }
 
 async function handleAbsenceModal(interaction, runtime) {
-  if (!isTeamMember(interaction.member, runtime)) {
-    return replyEphemeral(interaction, 'Du bist für eine Abmeldung nicht berechtigt.');
-  }
-
   const fromRaw = interaction.fields.getTextInputValue('absence_from')?.trim();
   const toRaw = interaction.fields.getTextInputValue('absence_to')?.trim();
   const reason = interaction.fields.getTextInputValue('absence_reason')?.trim();
