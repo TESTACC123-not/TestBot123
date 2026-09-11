@@ -34,7 +34,7 @@ export function buildWelcomeCard(member, template) {
   const headerSection = new SectionBuilder()
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`**${member.user.username}**`),
-      new TextDisplayBuilder().setContent('🎉 **Herzlich Willkommen auf München RP | VC 🇩🇪 🎙️**')
+      new TextDisplayBuilder().setContent('🎉 **Herzlich Willkommen auf Echo RP | VC 🇩🇪 🎙️**')
     )
     .setThumbnailAccessory(new ThumbnailBuilder({ media: { url: member.displayAvatarURL({ size: 256 }) } }));
 
@@ -64,7 +64,7 @@ export function buildWelcomeCard(member, template) {
 
   container.addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small));
   container.addTextDisplayComponents(
-    new TextDisplayBuilder().setContent(`-# München RP | VC · Willkommen · ${new Date().toLocaleString('de-DE')}`)
+    new TextDisplayBuilder().setContent(`-# Echo RP | VC · Willkommen · ${new Date().toLocaleString('de-DE')}`)
   );
 
   return {
@@ -105,7 +105,7 @@ export function buildGoodbyeCard(member, template) {
 
   container.addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small));
   container.addTextDisplayComponents(
-    new TextDisplayBuilder().setContent(`-# München RP | VC · Auf Wiedersehen · ${new Date().toLocaleString('de-DE')}`)
+    new TextDisplayBuilder().setContent(`-# Echo RP | VC · Auf Wiedersehen · ${new Date().toLocaleString('de-DE')}`)
   );
 
   return {
