@@ -38,8 +38,8 @@ function isAdmin(member) {
 
 function isStaff(member, runtime) {
   const roleIds = [
-    ...runtime.config.support.supporterRoleIds,
-    ...runtime.config.roles.supporterRoleIds
+    ...(runtime.config.support?.supporterRoleIds ?? []),
+    ...(runtime.config.roles?.supporterRoleIds ?? [])
   ];
 
   return isAdmin(member) || hasAnyRole(member, roleIds);
@@ -47,16 +47,38 @@ function isStaff(member, runtime) {
 
 function isFlyReviewer(member, runtime) {
   const roleIds = [
-    ...runtime.config.roles.flyReviewerRoleIds,
-    ...runtime.config.support.supporterRoleIds,
-    ...runtime.config.roles.supporterRoleIds
+    ...(runtime.config.roles?.flyReviewerRoleIds ?? []),
+    ...(runtime.config.support?.supporterRoleIds ?? []),
+    ...(runtime.config.roles?.supporterRoleIds ?? [])
   ];
 
   return isAdmin(member) || hasAnyRole(member, roleIds);
 }
 
-function isTeamMember(member, runtime) {
-  return isAdmin(member) || isStaff(member, runtime) || hasAnyRole(member, runtime.config.roles.teamRoles.map((role) => role.id));
+/**
+ * Rolle, die für den Dienststatus verwendet wird.
+ * Reihenfolge: Bereichsrolle -> On-Duty-Rolle -> erste Teamrolle.
+ */
+function resolveDutyRoleId(runtime, area) {
+  return (
+    getDutyRoleId(runtime, area) ||
+    runtime.config.roles?.onDutyRoleId ||
+    (runtime.config.roles?.teamRoles ?? []).find((role) => role?.id)?.id ||
+    ''
+  );
+}
+
+/**
+ * Rolle, die bei einem Fly-Antrag gepingt wird.
+ */
+function resolveFlyPingRoleId(runtime, teamRoleId = null) {
+  return (
+    teamRoleId ||
+    runtime.config.roles?.onDutyRoleId ||
+    (runtime.config.roles?.flyReviewerRoleIds ?? [])[0] ||
+    (runtime.config.roles?.supporterRoleIds ?? [])[0] ||
+    null
+  );
 }
 
 async function replyEphemeral(interaction, content) {
@@ -284,15 +306,11 @@ async function handleTrainerDashboardOpen(interaction, runtime) {
 async function handleDutyToggle(interaction, runtime, area, dutyOn) {
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-  if (!isAdmin(interaction.member) && !isStaff(interaction.member, runtime)) {
-    return replyEphemeral(interaction, 'Du bist nicht berechtigt, deinen Dienststatus zu ändern.');
-  }
-
-  const roleId = getDutyRoleId(runtime, area);
+  const roleId = resolveDutyRoleId(runtime, area);
   if (!roleId) {
     return replyEphemeral(
       interaction,
-      `Für den Bereich „${getDutyAreaLabel(runtime, area)}“ ist in der config.json (duty.areas.${area}.roleId) keine Rolle gesetzt.`
+      `Für den Bereich „${getDutyAreaLabel(runtime, area)}“ ist noch keine Dienstrolle hinterlegt. Bitte einmal eine Rolle unter duty.areas.${area}.roleId oder roles.onDutyRoleId in der config.json eintragen.`
     );
   }
 
@@ -354,12 +372,6 @@ async function handleFlyCreate(interaction, runtime) {
     return replyEphemeral(interaction, 'Bitte trage zuerst deinen Roblox-Name im Teamlisten-Kanal ein.');
   }
 
-  const member = interaction.member;
-  const teamRole = runtime.config.roles.teamRoles.find((role) => role.id && member.roles.cache.has(role.id));
-  if (!teamRole) {
-    return replyEphemeral(interaction, 'Für diesen Antrag muss mindestens eine konfigurierte Teamrolle vorhanden sein.');
-  }
-
   await interaction.showModal(buildFlyModal());
 }
 
@@ -389,7 +401,7 @@ async function handleFlyReviewed(interaction, runtime, requestId) {
 
   const payload = buildFlyRequestPayload({
     // Ping statt der generischen On-Duty-Rolle: die Teamrolle des Antrags (Rolle für den Anzeigenamen).
-    pingRoleId: updated.team_role_id || runtime.config.roles.onDutyRoleId,
+    pingRoleId: resolveFlyPingRoleId(runtime, updated.team_role_id),
     requestRecord: updated,
     reviewerName: `<@${interaction.user.id}>`,
     reviewedAt: updated.reviewed_at,
@@ -438,11 +450,6 @@ async function handleAbsenceOpen(interaction, runtime) {
   const activeAbsence = runtime.db.getActiveAbsenceByUser(runtime.config.guildId, interaction.user.id);
   if (activeAbsence) {
     return replyEphemeral(interaction, 'Du hast bereits eine aktive Abmeldung.');
-  }
-
-  const isAllowed = isTeamMember(interaction.member, runtime);
-  if (!isAllowed) {
-    return replyEphemeral(interaction, 'Du bist nicht berechtigt, eine Abmeldung zu erstellen.');
   }
 
   await interaction.showModal(buildAbsenceModal());
