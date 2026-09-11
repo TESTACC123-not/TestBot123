@@ -256,7 +256,7 @@ export function buildSupportLeaderboardPayload(rows, guild) {
 
   if (!rows.length) {
     container.addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small));
-    container.addTextDisplayComponents(new TextDisplayBuilder().setContent(footerLine(`Automatische Aktualisierung aktiv · ${new Date().toLocaleString('de-DE')}`)));
+    container.addTextDisplayComponents(new TextDisplayBuilder().setContent(footerLine(`Automatische Aktualisierung aktiv · ${formatGermanDateTime(Date.now())}`)));
     return { flags: MessageFlags.IsComponentsV2, components: [container] };
   }
 
@@ -268,7 +268,7 @@ export function buildSupportLeaderboardPayload(rows, guild) {
   container.addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small));
   container.addTextDisplayComponents(new TextDisplayBuilder().setContent(fieldsToText(fields)));
   container.addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small));
-  container.addTextDisplayComponents(new TextDisplayBuilder().setContent(footerLine(`Automatische Aktualisierung aktiv · ${new Date().toLocaleString('de-DE')}`)));
+  container.addTextDisplayComponents(new TextDisplayBuilder().setContent(footerLine(`Automatische Aktualisierung aktiv · ${formatGermanDateTime(Date.now())}`)));
 
   return { flags: MessageFlags.IsComponentsV2, components: [container] };
 }
@@ -439,7 +439,7 @@ export function buildTeamListEmbeds({ guild, config, rows, members }) {
     .map((id) => ({ id }));
 
   const allRoles = [...teamRoles, ...extraTeamRoles];
-  const timestamp = new Date().toLocaleString('de-DE');
+  const timestamp = formatGermanDateTime(Date.now());
 
   if (!allRoles.length) {
     const container = new ContainerBuilder()
@@ -540,7 +540,7 @@ export function buildFlyRequestPayload({
 }
 
 export function buildActiveAbsencesEmbeds({ absences, guild }) {
-  const timestamp = new Date().toLocaleString('de-DE');
+  const timestamp = formatGermanDateTime(Date.now());
 
   if (!absences.length) {
     const container = new ContainerBuilder()
@@ -641,7 +641,7 @@ export function buildSupportCaseChannelMessage(caseRecord, options = {}) {
 }
 
 export function resolveTeamRoleForMember(member, config) {
-  const orderedRoles = config.roles.teamRoles.filter((role) => role?.id);
+  const orderedRoles = (config.roles?.teamRoles ?? []).filter((role) => role?.id);
   return orderedRoles.find((role) => member.roles.cache.has(role.id)) ?? null;
 }
 
@@ -650,15 +650,15 @@ export function resolveNametagForMember(member, config, nametags, displayName = 
   if (!teamRole) {
     return {
       teamRole: null,
-      nametag: renderTemplate(nametags.default ?? null, displayName),
-      template: nametags.default ?? null
+      nametag: renderTemplate(nametags?.default ?? null, displayName),
+      template: nametags?.default ?? null
     };
   }
 
-  const mapping = nametags.mappings.find((entry) => entry.roleId && member.roles.cache.has(entry.roleId));
+  const mapping = (nametags?.mappings ?? []).find((entry) => entry.roleId && member.roles.cache.has(entry.roleId));
   // Falls keine Mapping-Regel passt, zeige den Rang (Label der Teamrolle)
   // statt des generischen "[TEAM]"-Defaults.
-  const template = mapping?.nametag ?? teamRole.label ?? nametags.default ?? null;
+  const template = mapping?.nametag ?? teamRole.label ?? nametags?.default ?? null;
   return {
     teamRole,
     nametag: renderTemplate(template, displayName),
