@@ -98,7 +98,7 @@ function buildWaitingRequestPayload(runtime, request, type) {
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `-# München RP | VC · ${areaLabel}-Wartebereich · ${formatGermanDateTime(request.created_at)}`
+        `-# Echo RP | VC · ${areaLabel}-Wartebereich · ${formatGermanDateTime(request.created_at)}`
       )
     );
 
