@@ -206,7 +206,7 @@ export function buildSupportCasePayload(caseRecord, options = {}) {
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        footerLine(`München RP | VC - Supportsystem · ${formatGermanDateTime(caseRecord.created_at)}`)
+        footerLine(`Echo RP | VC - Supportsystem · ${formatGermanDateTime(caseRecord.created_at)}`)
       )
     );
 
@@ -527,7 +527,7 @@ export function buildFlyRequestPayload({
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small))
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(fieldsToText(fields)))
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small))
-    .addTextDisplayComponents(new TextDisplayBuilder().setContent(footerLine('München RP | VC - Antragsystem')))
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(footerLine('Echo RP | VC - Antragsystem')))
     .addActionRowComponents(row);
 
   return {
