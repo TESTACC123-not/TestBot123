@@ -1,7 +1,8 @@
 import { ContainerBuilder, TextDisplayBuilder, MessageFlags } from 'discord.js';
+import { formatGermanDateTime } from './time.js';
 
 function timestamp() {
-  return new Date().toISOString();
+  return formatGermanDateTime(Date.now());
 }
 
 export const logger = {
@@ -46,7 +47,7 @@ export async function sendLog(client, channelId, title, description, color = 0x5
   }
 
   container.addTextDisplayComponents(
-    new TextDisplayBuilder().setContent(`-# ${new Date().toLocaleString('de-DE')}`)
+    new TextDisplayBuilder().setContent(`-# ${formatGermanDateTime(Date.now())}`)
   );
 
   await channel.send({ flags: MessageFlags.IsComponentsV2, components: [container] }).catch((error) => {
