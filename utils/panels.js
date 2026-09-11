@@ -9,6 +9,7 @@ import {
   PermissionFlagsBits
 } from 'discord.js';
 import { buildActiveAbsencesEmbeds, buildAbsencePanelPayload, buildDutyPanelPayload, buildFlyPanelPayload, buildSupportCaseChannelMessage, buildSupportLeaderboardPayload, buildTeamListEmbeds, buildVerifyPanelPayload } from './renderers.js';
+import { formatGermanDateTime } from './time.js';
 import { buildTeamPingsPanelPayload } from './teamPings.js';
 import * as trainerDashboard from './trainerDashboard.js';
 import { logger, sendLog } from './logger.js';
@@ -57,7 +58,7 @@ function buildFallbackPanelPayload(panelKey) {
       new TextDisplayBuilder().setContent('Dieses Panel konnte gerade keine Daten laden. Bitte später erneut versuchen oder das Panel neu synchronisieren.')
     )
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small))
-    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`-# ${new Date().toLocaleString('de-DE')}`));
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`-# ${formatGermanDateTime(Date.now())}`));
 
   return { flags: MessageFlags.IsComponentsV2, components: [container] };
 }
@@ -136,7 +137,7 @@ function clearTrainerAssignments(runtime) {
 }
 
 async function buildTrainerAssignmentListPayloadFromRows(guild, runtime) {
-  const timestamp = new Date().toLocaleString('de-DE');
+  const timestamp = formatGermanDateTime(Date.now());
   const resolved = await resolveCurrentTrainerPairings(guild, runtime);
   if (!resolved) {
     const container = new ContainerBuilder()
@@ -767,8 +768,8 @@ async function syncExpiredAbsences(client, runtime) {
           `Die Abmeldung von <@${finished.user_id}> wurde automatisch beendet.`,
           0x2ecc71,
           [
-            { name: 'Von', value: new Date(finished.from_at).toLocaleString('de-DE'), inline: true },
-            { name: 'Bis', value: new Date(finished.to_at).toLocaleString('de-DE'), inline: true },
+            { name: 'Von', value: formatGermanDateTime(finished.from_at), inline: true },
+            { name: 'Bis', value: formatGermanDateTime(finished.to_at), inline: true },
             { name: 'Grund', value: finished.reason, inline: false }
           ]
         );
