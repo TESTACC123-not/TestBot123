@@ -205,7 +205,7 @@ function buildTrainerDashboardSelectRow(profiles, selectedMemberId = null) {
 }
 
 function buildFooterLine() {
-  return `-# Ausbilder-Dashboard | Live-Daten · ${new Date().toLocaleString('de-DE')}`;
+  return `-# Ausbilder-Dashboard | Live-Daten · ${formatGermanDateTime(Date.now())}`;
 }
 
 function buildTrainerOverviewContainer(profileCount) {
