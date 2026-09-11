@@ -49,7 +49,7 @@ export function buildBewerbungPanelPayload() {
       )
     )
     .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(footerLine(`München RP | VC - Bewerbungssystem`))
+      new TextDisplayBuilder().setContent(footerLine(`Echo RP | VC - Bewerbungssystem`))
     );
 
   return { flags: MessageFlags.IsComponentsV2, components: [container] };
@@ -103,7 +103,7 @@ export function buildBewerbungSubmittedPayload() {
       new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small)
     )
     .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(footerLine('München RP | VC - Bewerbungssystem'))
+      new TextDisplayBuilder().setContent(footerLine('Echo RP | VC - Bewerbungssystem'))
     );
 
   return { flags: MessageFlags.IsComponentsV2, components: [container] };
@@ -125,7 +125,7 @@ export function buildBewerbungCancelledPayload() {
       new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small)
     )
     .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(footerLine('München RP | VC - Bewerbungssystem'))
+      new TextDisplayBuilder().setContent(footerLine('Echo RP | VC - Bewerbungssystem'))
     );
 
   return { flags: MessageFlags.IsComponentsV2, components: [container] };
@@ -165,7 +165,7 @@ export function buildBewerbungDecisionDmPayload({ status, reason, rejectDuration
       new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small)
     )
     .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(footerLine('München RP | VC - Bewerbungssystem'))
+      new TextDisplayBuilder().setContent(footerLine('Echo RP | VC - Bewerbungssystem'))
     );
 
   return { flags: MessageFlags.IsComponentsV2, components: [container] };
@@ -220,7 +220,7 @@ export function buildBewerbungResultPayload({ record, questions, reviewerName = 
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(fieldsToText(fields)))
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small))
     .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(footerLine('München RP | VC - Bewerbungssystem'))
+      new TextDisplayBuilder().setContent(footerLine('Echo RP | VC - Bewerbungssystem'))
     );
 
   if (isReviewed) {
