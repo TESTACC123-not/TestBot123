@@ -457,7 +457,7 @@ async function refreshTeamListPanel(client, runtime) {
         name: 'teamliste',
         type: ChannelType.GuildText,
         parent: runtime.config.categories.teamCategoryId || undefined,
-        reason: 'Automatisch erstellte Teamliste für München RP | VC'
+        reason: 'Automatisch erstellte Teamliste für Echo RP | VC'
       }).catch((error) => {
         logger.warn('Teamlisten-Kanal konnte nicht automatisch erstellt werden.', error?.message ?? error);
         return null;
@@ -522,7 +522,7 @@ async function refreshTrainerDashboardPanel(client, runtime) {
         name: 'ausbilder-dashboard',
         type: ChannelType.GuildText,
         parent: runtime.config.categories.teamCategoryId || undefined,
-        reason: 'Automatisch erstelltes Ausbilder-Dashboard für München RP | VC'
+        reason: 'Automatisch erstelltes Ausbilder-Dashboard für Echo RP | VC'
       }).catch((error) => {
         logger.warn('Ausbilder-Dashboard-Kanal konnte nicht automatisch erstellt werden.', error?.message ?? error);
         return null;
