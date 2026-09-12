@@ -316,6 +316,16 @@ export function loadConfig(baseDir = process.cwd()) {
     },
 
     // ------------------------------------------------------------------------
+    //  REAKTIONS-LEADERBOARD  (✅ / :white_check_mark:)
+    // ------------------------------------------------------------------------
+    reactionLeaderboard: {
+      // Kanal, in dem ✅-Reaktionen gezählt werden.
+      sourceChannelId: config.reactionLeaderboard?.sourceChannelId ?? '',
+      // Kanal, in dem die Rangliste gepostet bzw. aktualisiert wird.
+      leaderboardChannelId: config.reactionLeaderboard?.leaderboardChannelId ?? ''
+    },
+
+    // ------------------------------------------------------------------------
     //  ON-DUTY-SYSTEM  (JEDER BEREICH = EINE ROLLE + EIGENE KANÄLE/RÄUME).
     //  Das ist ab jetzt die EINE zentrale Stelle für alle Dienst-Bereiche.
     // ------------------------------------------------------------------------
