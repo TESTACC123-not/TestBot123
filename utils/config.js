@@ -284,7 +284,9 @@ export function loadConfig(baseDir = process.cwd()) {
 
     // Ingame-Server-Code. Schreibt jemand „code“ in einen Server-Chat,
     // antwortet der Bot mit diesem Wert.
-    gameServerCode: String(config.gameServerCode ?? '').trim(),
+    // Alte Konfigurationen, in denen der Code versehentlich unter hausTicket liegt,
+    // werden weiterhin unterstützt.
+    gameServerCode: String(config.gameServerCode ?? config.hausTicket?.gameServerCode ?? '').trim(),
 
     // ------------------------------------------------------------------------
     //  IC-COUNTER  (Spielerzahl-Meldung für den Server-Status).
