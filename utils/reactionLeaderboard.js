@@ -85,9 +85,9 @@ export function buildReactionLeaderboardPayload(entries = []) {
 }
 
 export async function publishReactionLeaderboard(client, runtime) {
-  const channelId = runtime.config.reactionLeaderboard?.leaderboardChannelId;
+  const channelId = runtime.config.reactionLeaderboard?.leaderboardChannelId || runtime.config.reactionLeaderboard?.channelId;
   if (!channelId) {
-    return { ok: false, content: '❌ reactionLeaderboard.leaderboardChannelId ist nicht in der config.json gesetzt.' };
+    return { ok: false, content: '❌ reactionLeaderboard.channelId ist nicht in der config.json gesetzt.' };
   }
 
   const channel = await client.channels.fetch(channelId).catch(() => null);
