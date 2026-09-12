@@ -145,6 +145,10 @@
     ]
   },
 
+  "aiAssistant": {
+    "enabled": true
+  },
+
   "gameServerCode": "DEIN_INGAME_SERVER_CODE",
 
   "icCounter": {
