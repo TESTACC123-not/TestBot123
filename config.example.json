@@ -145,6 +145,8 @@
     ]
   },
 
+  "gameServerCode": "DEIN_INGAME_SERVER_CODE",
+
   "icCounter": {
     "statusChannelId": "KANAL_FUER_STATUS_MELDUNG",
     "messageChannelId": "KANAL_WO_IC_SPIELER_EINGEGEBEN_WERDEN",
