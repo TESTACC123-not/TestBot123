@@ -169,6 +169,11 @@
     "playerCap": 50
   },
 
+  "reactionLeaderboard": {
+    "sourceChannelId": "KANAL_DESSEN_WEISSE_HAKEN_GEZAEHLT_WERDEN",
+    "leaderboardChannelId": "KANAL_FUER_DAS_WHITE_CHECK_MARK_LEADERBOARD"
+  },
+
   "teamUpdate": {
     "channelId": "",
     "teamPingRoleId": "",
