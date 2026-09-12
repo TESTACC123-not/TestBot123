@@ -596,6 +596,13 @@ export class BotDatabase {
     `).all(guildId, limit);
   }
 
+  resetSupportLeaderboard(guildId) {
+    return this.db.prepare(`
+      DELETE FROM support_cases
+      WHERE guild_id = ? AND status = 'closed'
+    `).run(guildId).changes;
+  }
+
   createWaitingRequest(record) {
     this.db.prepare(`
       INSERT INTO waiting_requests (
