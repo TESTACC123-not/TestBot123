@@ -282,6 +282,11 @@ export function loadConfig(baseDir = process.cwd()) {
     //  `duty.areas.<bereich>.waitingChannelId` usw. – EIN Eintrag pro Bereich.
     // ------------------------------------------------------------------------
 
+    // Lokaler Assistent: beantwortet Erwähnungen aus den Daten dieser config.json.
+    aiAssistant: {
+      enabled: config.aiAssistant?.enabled !== false
+    },
+
     // Ingame-Server-Code. Schreibt jemand „code“ in einen Server-Chat,
     // antwortet der Bot mit diesem Wert.
     // Alte Konfigurationen, in denen der Code versehentlich unter hausTicket liegt,
