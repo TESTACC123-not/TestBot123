@@ -21,7 +21,7 @@ export default {
     }
 
     const config = runtime.config.reactionLeaderboard ?? {};
-    if (!config.sourceChannelId || reaction.message?.channelId !== config.sourceChannelId) {
+    if (!config.channelId || reaction.message?.channelId !== config.channelId) {
       return;
     }
 
