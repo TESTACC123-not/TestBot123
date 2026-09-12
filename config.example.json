@@ -170,8 +170,8 @@
   },
 
   "reactionLeaderboard": {
-    "sourceChannelId": "KANAL_DESSEN_WEISSE_HAKEN_GEZAEHLT_WERDEN",
-    "leaderboardChannelId": "KANAL_FUER_DAS_WHITE_CHECK_MARK_LEADERBOARD"
+    "channelId": "FESTER_KANAL_FUER_REAKTIONEN_UND_LEADERBOARD",
+    "leaderboardChannelId": ""
   },
 
   "teamUpdate": {
