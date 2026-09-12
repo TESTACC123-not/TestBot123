@@ -282,6 +282,10 @@ export function loadConfig(baseDir = process.cwd()) {
     //  `duty.areas.<bereich>.waitingChannelId` usw. – EIN Eintrag pro Bereich.
     // ------------------------------------------------------------------------
 
+    // Ingame-Server-Code. Schreibt jemand „code“ in einen Server-Chat,
+    // antwortet der Bot mit diesem Wert.
+    gameServerCode: String(config.gameServerCode ?? '').trim(),
+
     // ------------------------------------------------------------------------
     //  IC-COUNTER  (Spielerzahl-Meldung für den Server-Status).
     //  Falls kein eigener "icCounter"-Block existiert, werden die Kanäle und
