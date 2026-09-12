@@ -25,7 +25,7 @@ export default {
     if (
       message.guildId &&
       message.channel?.isTextBased?.() &&
-      /(^|[^\p{L}\p{N}_])code([^\p{L}\p{N}_]|$)/iu.test(message.content ?? '')
+      String(message.content ?? '').toLocaleLowerCase('de-DE').includes('code')
     ) {
       const gameServerCode = runtime.config.gameServerCode;
       if (gameServerCode) {
@@ -35,6 +35,8 @@ export default {
         }).catch((error) => {
           logger.warn('Ingame-Server-Code konnte nicht gesendet werden.', error?.message ?? error);
         });
+      } else {
+        logger.warn('„code“ wurde erkannt, aber gameServerCode ist in der config.json leer oder fehlt.');
       }
     }
 
