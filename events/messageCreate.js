@@ -20,6 +20,24 @@ export default {
       return;
     }
 
+    // Auf das eigenständige Wort „code“ in jedem Server-Textkanal reagieren.
+    // Bot-Nachrichten wurden oben bereits ausgefiltert.
+    if (
+      message.guildId &&
+      message.channel?.isTextBased?.() &&
+      /(^|[^\p{L}\p{N}_])code([^\p{L}\p{N}_]|$)/iu.test(message.content ?? '')
+    ) {
+      const gameServerCode = runtime.config.gameServerCode;
+      if (gameServerCode) {
+        await message.reply({
+          content: `Der aktuelle Ingame-Server-Code lautet: \`${gameServerCode}\``,
+          allowedMentions: { repliedUser: false }
+        }).catch((error) => {
+          logger.warn('Ingame-Server-Code konnte nicht gesendet werden.', error?.message ?? error);
+        });
+      }
+    }
+
     // Bewerbungs-Dialog per DM: Antworten auf die gestellten Fragen erfassen.
     if (message.channel?.isDMBased?.()) {
       const handled = await handleBewerbungDmMessage(message, runtime).catch((error) => {
