@@ -20,6 +20,20 @@ export default {
       return;
     }
 
+    // Bei einer Erwähnung des Bots kurz und ohne erneuten Ping antworten.
+    if (
+      message.guildId &&
+      message.client.user &&
+      message.mentions.users.has(message.client.user.id)
+    ) {
+      await message.reply({
+        content: 'Wie kann ich helfen?',
+        allowedMentions: { repliedUser: false }
+      }).catch((error) => {
+        logger.warn('Erwähnungs-Antwort konnte nicht gesendet werden.', error?.message ?? error);
+      });
+    }
+
     // Auf das eigenständige Wort „code“ in jedem Server-Textkanal reagieren.
     // Bot-Nachrichten wurden oben bereits ausgefiltert.
     if (
