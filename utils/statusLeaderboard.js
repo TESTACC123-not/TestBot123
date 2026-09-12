@@ -28,6 +28,11 @@ function writeLeaderboard(db, guildId, data) {
   db.setSetting(`${LB_KEY}:${guildId}`, JSON.stringify(data));
 }
 
+/** Setzt alle gezählten Status-Meldungen eines Servers zurück. */
+export function resetStatusLeaderboard(db, guildId) {
+  writeLeaderboard(db, guildId, {});
+}
+
 /**
  * Zählt eine Status-Meldung für den Nutzer hoch.
  */
