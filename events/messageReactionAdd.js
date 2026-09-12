@@ -20,8 +20,15 @@ export default {
       await reaction.message.fetch().catch(() => null);
     }
 
-    const config = runtime.config.reactionLeaderboard ?? {};
-    if (!config.channelId || reaction.message?.channelId !== config.channelId) {
+    // Einige Discord.js-Versionen reichen bei Reaktions-Events zusätzliche
+    // Argumente weiter. Deshalb die Runtime bevorzugt am Client auflösen.
+    const activeRuntime = reaction.client?.runtime?.config
+      ? reaction.client.runtime
+      : runtime?.config
+        ? runtime
+        : null;
+    const config = activeRuntime?.config?.reactionLeaderboard ?? {};
+    if (!activeRuntime || !config.channelId || reaction.message?.channelId !== config.channelId) {
       return;
     }
 
@@ -29,9 +36,9 @@ export default {
       return;
     }
 
-    trackWhiteCheckMarkReaction(runtime.db, reaction.message.guildId, user.id);
+    trackWhiteCheckMarkReaction(activeRuntime.db, reaction.message.guildId, user.id);
 
-    await publishReactionLeaderboard(reaction.client, runtime).catch((error) => {
+    await publishReactionLeaderboard(reaction.client, activeRuntime).catch((error) => {
       logger.warn('White-Check-Mark-Leaderboard konnte nach einer Reaktion nicht aktualisiert werden.', error);
     });
   }
