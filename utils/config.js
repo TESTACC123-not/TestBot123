@@ -319,9 +319,9 @@ export function loadConfig(baseDir = process.cwd()) {
     //  REAKTIONS-LEADERBOARD  (✅ / :white_check_mark:)
     // ------------------------------------------------------------------------
     reactionLeaderboard: {
-      // Kanal, in dem ✅-Reaktionen gezählt werden.
-      sourceChannelId: config.reactionLeaderboard?.sourceChannelId ?? '',
-      // Kanal, in dem die Rangliste gepostet bzw. aktualisiert wird.
+      // Fester Kanal: Hier werden ✅-Reaktionen gezählt und die Rangliste gepostet.
+      channelId: config.reactionLeaderboard?.channelId ?? config.reactionLeaderboard?.sourceChannelId ?? '',
+      // Optional: eigener fester Ausgabe-Kanal. Leer lassen = channelId verwenden.
       leaderboardChannelId: config.reactionLeaderboard?.leaderboardChannelId ?? ''
     },
 
