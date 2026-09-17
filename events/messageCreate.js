@@ -1,7 +1,6 @@
 import { logger } from '../utils/logger.js';
 import { refreshTeamListPanel } from '../utils/panels.js';
 import { handleBewerbungDmMessage } from '../utils/bewerbung.js';
-import { answerFromConfigKnowledge } from '../utils/aiAssistant.js';
 
 export default {
   name: 'messageCreate',
@@ -21,35 +20,11 @@ export default {
       return;
     }
 
-    // Bei einer Erwähnung beantwortet der lokale Assistent Fragen anhand der config.json.
-    // Ohne Frage bleibt die kurze Begrüßung erhalten.
-    let aiHandled = false;
-    if (
-      message.guildId &&
-      message.client.user &&
-      message.mentions.users.has(message.client.user.id)
-    ) {
-      aiHandled = await answerFromConfigKnowledge(message, runtime).catch((error) => {
-        logger.warn('Lokaler Assistent konnte die Nachricht nicht beantworten.', error?.message ?? error);
-        return false;
-      });
-
-      if (!aiHandled) {
-        await message.reply({
-          content: 'Wie kann ich helfen?',
-          allowedMentions: { repliedUser: false }
-        }).catch((error) => {
-          logger.warn('Erwähnungs-Antwort konnte nicht gesendet werden.', error?.message ?? error);
-        });
-      }
-    }
-
     // Auf das eigenständige Wort „code“ in jedem Server-Textkanal reagieren.
     // Bot-Nachrichten wurden oben bereits ausgefiltert.
     if (
       message.guildId &&
       message.channel?.isTextBased?.() &&
-      !aiHandled &&
       String(message.content ?? '').toLocaleLowerCase('de-DE').includes('code')
     ) {
       const gameServerCode = runtime.config.gameServerCode;
