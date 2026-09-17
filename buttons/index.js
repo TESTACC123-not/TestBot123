@@ -115,17 +115,17 @@ function buildAbsenceModal() {
 
   const from = new TextInputBuilder()
     .setCustomId('absence_from')
-    .setLabel('Von (TT.MM.JJ HH:MM)')
+    .setLabel('Von (z. B. 1.6.2025 um 20 Uhr)')
     .setStyle(TextInputStyle.Short)
     .setRequired(true)
-    .setPlaceholder('04.08.26 18:00');
+    .setPlaceholder('01.06.2025 um 20 Uhr');
 
   const to = new TextInputBuilder()
     .setCustomId('absence_to')
-    .setLabel('Bis (TT.MM.JJ HH:MM)')
+    .setLabel('Bis (z. B. 1.6.2025 um 20 Uhr)')
     .setStyle(TextInputStyle.Short)
     .setRequired(true)
-    .setPlaceholder('05.08.26 20:00');
+    .setPlaceholder('02.06.2025 20:30 Uhr');
 
   const reason = new TextInputBuilder()
     .setCustomId('absence_reason')
