@@ -125,23 +125,35 @@ export function formatDurationMs(milliseconds = 0) {
   return formatDuration(milliseconds / 1000);
 }
 
-/** Liest „TT.MM.JJ HH:MM“ bzw. „TT.MM.JJJJ HH:MM“ als deutsche Uhrzeit ein. */
+/**
+ * Liest gängige deutsche Datums-/Zeitformate als deutsche Uhrzeit ein.
+ * Beispiele: 01.06.25 20:00, 1.6.2025 um 20 Uhr, 1.6. 20:30 Uhr.
+ */
 export function parseGermanDateTime(input) {
   if (input instanceof Date) {
     return Number.isNaN(input.getTime()) ? null : input;
   }
 
-  const value = String(input ?? '').trim();
-  const match = value.match(/^(\d{1,2})\.(\d{1,2})\.(\d{2}|\d{4})\s+(\d{1,2}):(\d{2})$/);
-  if (!match) {
-    return null;
-  }
+  const value = String(input ?? '')
+    .trim()
+    .toLocaleLowerCase('de-DE')
+    .replace(/,/g, ' ')
+    .replace(/\s+/g, ' ');
+
+  const match = value.match(
+    /^(\d{1,2})\.(\d{1,2})\.(?:(\d{2}|\d{4})\s*)?(?:um\s*)?(\d{1,2})(?:(?::|\.)?(\d{2}))?\s*(?:uhr)?$/
+  );
+  if (!match) return null;
 
   const day = Number(match[1]);
   const month = Number(match[2]);
-  const year = Number(match[3].length === 2 ? `20${match[3]}` : match[3]);
+  const zonedNow = getZonedParts(new Date());
+  const suppliedYear = match[3];
+  const year = suppliedYear
+    ? Number(suppliedYear.length === 2 ? '20' + suppliedYear : suppliedYear)
+    : Number(zonedNow.year);
   const hour = Number(match[4]);
-  const minute = Number(match[5]);
+  const minute = Number(match[5] ?? 0);
 
   if (month < 1 || month > 12 || day < 1 || day > 31 || hour > 23 || minute > 59) {
     return null;
@@ -149,17 +161,13 @@ export function parseGermanDateTime(input) {
 
   const date = berlinWallClockToDate(year, month, day, hour, minute);
   const parts = getZonedParts(date);
-
-  // Ungültige Daten (z. B. 31.02.) abfangen.
   if (
     Number(parts.day) !== day ||
     Number(parts.month) !== month ||
     Number(parts.year) !== year ||
     Number(parts.hour) !== hour ||
     Number(parts.minute) !== minute
-  ) {
-    return null;
-  }
+  ) return null;
 
   return date;
 }
