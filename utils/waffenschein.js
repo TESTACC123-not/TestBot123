@@ -246,7 +246,7 @@ export async function createWaffenscheinTicketChannel(guild, member, typeKey, co
     ownerId: member.id,
     typeKey,
     type,
-    bankAccount: bankAccount || 'Guar443344',
+    bankAccount: bankAccount || 'EchoRPServer',
     status: 'open'
   }));
 
