@@ -282,11 +282,6 @@ export function loadConfig(baseDir = process.cwd()) {
     //  `duty.areas.<bereich>.waitingChannelId` usw. – EIN Eintrag pro Bereich.
     // ------------------------------------------------------------------------
 
-    // Lokaler Assistent: beantwortet Erwähnungen aus den Daten dieser config.json.
-    aiAssistant: {
-      enabled: config.aiAssistant?.enabled !== false
-    },
-
     // Ingame-Server-Code. Schreibt jemand „code“ in einen Server-Chat,
     // antwortet der Bot mit diesem Wert.
     // Alte Konfigurationen, in denen der Code versehentlich unter hausTicket liegt,
@@ -386,7 +381,7 @@ export function loadConfig(baseDir = process.cwd()) {
       // Rolle, die bei Annahme an den Antragsteller vergeben wird.
       acceptRoleId: config.waffenschein?.acceptRoleId ?? '',
       // Bank-Konto, an das überwiesen werden muss (Hinweis im Ticket).
-      bankAccount: config.waffenschein?.bankAccount ?? 'Guar443344',
+      bankAccount: config.waffenschein?.bankAccount ?? 'EchoRPServer',
       // Waffenschein-Stufen (a/b/c). Jede mit label/description/price.
       types: normalizeWaffenscheinTypes(config.waffenschein?.types)
     },
