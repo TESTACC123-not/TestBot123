@@ -118,10 +118,10 @@ export async function publishRpControlPanel(client, runtime) {
 }
 
 export async function postRpControlAnnouncement(client, runtime, state) {
-  const channelId = runtime.config.serverStatus?.rpChannelId;
+  const channelId = runtime.config.rpControl?.channelId;
   const channel = await client.channels.fetch(channelId).catch(() => null);
   if (!channel?.isTextBased()) {
-    throw new Error('serverStatus.rpChannelId ist nicht korrekt konfiguriert.');
+    throw new Error('rpControl.channelId ist nicht korrekt konfiguriert.');
   }
 
   return channel.send(buildRpAnnouncementPayload(state, runtime.config));
