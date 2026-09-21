@@ -96,9 +96,12 @@ export async function publishRpControlPanel(client, runtime) {
     return null;
   }
 
-  const channel = await client.channels.fetch(channelId).catch(() => null);
+  const channel = await client.channels.fetch(channelId).catch((error) => {
+    logger.warn('RP-Steuerung: Panel-Kanal konnte nicht geladen werden.', error?.message ?? error);
+    return null;
+  });
   if (!channel?.isTextBased()) {
-    logger.warn('RP-Steuerung: Der feste Panel-Kanal wurde nicht gefunden.');
+    logger.warn(`RP-Steuerung: Panel-Kanal ${channelId} wurde nicht gefunden oder ist kein Textkanal.`);
     return null;
   }
 
@@ -107,14 +110,26 @@ export async function publishRpControlPanel(client, runtime) {
   if (stored?.message_id) {
     const message = await channel.messages.fetch(stored.message_id).catch(() => null);
     if (message) {
-      await message.edit(payload);
-      return message;
+      try {
+        await message.edit(payload);
+        return message;
+      } catch (error) {
+        logger.warn('RP-Steuerung: Bestehendes Panel konnte nicht aktualisiert werden.', error?.message ?? error);
+      }
     }
   }
 
-  const sent = await channel.send(payload);
-  runtime.db.upsertPanelMessage(CONTROL_PANEL_KEY, runtime.config.guildId, channel.id, sent.id);
-  return sent;
+  try {
+    const sent = await channel.send(payload);
+    runtime.db.upsertPanelMessage(CONTROL_PANEL_KEY, runtime.config.guildId, channel.id, sent.id);
+    return sent;
+  } catch (error) {
+    logger.error(
+      `RP-Steuerung: Panel konnte nicht in Kanal ${channelId} gesendet werden. Der Bot braucht „Kanal ansehen“, „Nachrichten senden“ und „Nachrichtenverlauf anzeigen“.`,
+      error
+    );
+    return null;
+  }
 }
 
 export async function postRpControlAnnouncement(client, runtime, state) {
