@@ -27,14 +27,19 @@ function isAdmin(member) {
   );
 }
 
-function isTeamMember(member, runtime) {
-  return (
-    isAdmin(member) ||
-    hasAnyRole(
-      member,
-      runtime.config.roles.teamRoles.map((role) => role.id)
-    )
-  );
+function isTeamUpdateAllowed(member, runtime) {
+  if (isAdmin(member)) return true;
+  const allowedRoleIds = runtime.config.teamUpdate?.allowedRoleIds ?? [];
+  return allowedRoleIds.length > 0 && hasAnyRole(member, allowedRoleIds);
+}
+
+function getBlockedGrantRole(interaction, runtime) {
+  const excludedRoleIds = new Set(runtime.config.teamUpdate?.excludedRoleIds ?? []);
+  if (excludedRoleIds.size === 0) return null;
+
+  return ['zu', 'auf', 'nebenrolle']
+    .map((name) => interaction.options.getRole(name))
+    .find((role) => role && excludedRoleIds.has(role.id)) ?? null;
 }
 
 function getMention(user) {
@@ -187,6 +192,27 @@ async function applyRoleChanges(interaction, runtime, templateName) {
   return { changed: false, note: null };
 }
 
+
+async function applySideRole(interaction) {
+  const sideRole = interaction.options.getRole('nebenrolle');
+  const targetUser = interaction.options.getUser('wer');
+  if (!sideRole || !targetUser) return { changed: false, note: null };
+
+  const member = await interaction.guild.members.fetch(targetUser.id).catch(() => null);
+  if (!member) return { changed: false, note: `Mitglied ${targetUser} konnte nicht gefunden werden.` };
+  if (member.roles.cache.has(sideRole.id)) {
+    return { changed: false, note: `${targetUser} hat die Nebenrolle ${sideRole} bereits.` };
+  }
+
+  try {
+    await member.roles.add(sideRole.id);
+    return { changed: true, note: `${targetUser} hat zusätzlich die Nebenrolle ${sideRole} erhalten.` };
+  } catch (error) {
+    logger.warn('Nebenrolle konnte nicht vergeben werden.', error?.message ?? error);
+    return { changed: false, note: 'Die Nebenrolle konnte nicht vergeben werden.' };
+  }
+}
+
 /* ============================================================
  * TEMPLATE CONTENT
  * ============================================================ */
@@ -318,6 +344,9 @@ function buildTemplateMessage(interaction, runtime, templateName) {
   const template = buildTemplateContent(interaction, templateName);
   if (!template) return null;
 
+  const nebenrolle = interaction.options.getRole('nebenrolle');
+  if (nebenrolle) template.lines.push(`**Nebenrolle:** <@&${nebenrolle.id}>`);
+
   const teamPingRoleId = runtime.config.teamUpdate?.teamPingRoleId;
 
   const container = new ContainerBuilder()
@@ -396,9 +425,16 @@ function buildTemplateMessage(interaction, runtime, templateName) {
 async function sendUpdate(interaction, runtime, templateName) {
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-  if (!isTeamMember(interaction.member, runtime)) {
+  if (!isTeamUpdateAllowed(interaction.member, runtime)) {
     return interaction.editReply({
-      content: 'Du bist nicht berechtigt, diesen Eintrag zu erstellen.'
+      content: 'Du bist nicht berechtigt. Dir fehlt eine in teamUpdate.allowedRoleIds eingetragene Rolle.'
+    });
+  }
+
+  const blockedRole = getBlockedGrantRole(interaction, runtime);
+  if (blockedRole) {
+    return interaction.editReply({
+      content: `Die Rolle ${blockedRole} ist für Team-Updates gesperrt und kann hier nicht vergeben werden.`
     });
   }
 
@@ -437,6 +473,7 @@ async function sendUpdate(interaction, runtime, templateName) {
   }
 
   const roleChange = await applyRoleChanges(interaction, runtime, templateName);
+  const sideRoleChange = await applySideRole(interaction);
 
   const message = buildTemplateMessage(interaction, runtime, templateName);
   if (!message) {
@@ -488,6 +525,7 @@ async function sendUpdate(interaction, runtime, templateName) {
 
   const parts = ['Eintrag wurde veröffentlicht.'];
   if (roleChange.note) parts.push(roleChange.note);
+  if (sideRoleChange.note) parts.push(sideRoleChange.note);
 
   return interaction.editReply({
     content: `${parts.join(' ')} Kanal: ${targetChannel}.`
@@ -519,142 +557,57 @@ const signatureOptions = (builder) =>
     .addUserOption((o) =>
       o.setName('nebenunterschrift5')
        .setDescription('Optional: Zusätzliche Unterschrift 5.')
+    )
+    .addRoleOption((o) =>
+      o.setName('nebenrolle')
+       .setDescription('Optional: Zusätzliche Nebenrolle, die vergeben wird.')
     );
 
 /* ============================================================
  * COMMAND DATA
  * ============================================================ */
 
-export default {
-  data: new SlashCommandBuilder()
-    .setName('team-update')
-    .setDescription('Erstellt und veröffentlicht Team-Einträge als fertige Vorlagen.')
-    .setDMPermission(false)
+function createTeamUpdateCommand(name, description, addOptions) {
+  const builder = new SlashCommandBuilder()
+    .setName(name)
+    .setDescription(description)
+    .setDMPermission(false);
 
-    .addSubcommand((sub) =>
-      signatureOptions(
-        sub
-          .setName('temp-teamwarn')
-          .setDescription('Erstellt eine temporäre Teamwarnung.')
-          .addUserOption((o) =>
-            o.setName('wer').setDescription('Die betroffene Person.').setRequired(true)
-          )
-          .addStringOption((o) =>
-            o.setName('grund').setDescription('Der Grund der Teamwarnung.').setRequired(true)
-          )
-          .addStringOption((o) =>
-            o.setName('dauer').setDescription('Die Dauer der Warnung.').setRequired(true)
-          )
-      )
-    )
+  signatureOptions(addOptions(builder));
+  return {
+    data: builder,
+    execute: (interaction, runtime) => sendUpdate(interaction, runtime, name)
+  };
+}
 
-    .addSubcommand((sub) =>
-      signatureOptions(
-        sub
-          .setName('teamwarn')
-          .setDescription('Erstellt eine normale Teamwarnung.')
-          .addUserOption((o) =>
-            o.setName('wer').setDescription('Die betroffene Person.').setRequired(true)
-          )
-          .addStringOption((o) =>
-            o.setName('grund').setDescription('Der Grund der Teamwarnung.').setRequired(true)
-          )
-      )
-    )
-
-    .addSubcommand((sub) =>
-      signatureOptions(
-        sub
-          .setName('neuer-teamler')
-          .setDescription('Erstellt einen Eintrag für einen neuen Teamler.')
-          .addUserOption((o) =>
-            o.setName('wer').setDescription('Die betroffene Person.').setRequired(true)
-          )
-          .addRoleOption((o) =>
-            o.setName('zu').setDescription('Die Zielrolle.').setRequired(true)
-          )
-          .addStringOption((o) =>
-            o.setName('grund').setDescription('Der Grund für den Eintrag.').setRequired(true)
-          )
-      )
-    )
-
-    .addSubcommand((sub) =>
-      signatureOptions(
-        sub
-          .setName('uprank')
-          .setDescription('Erstellt einen Uprank-Eintrag.')
-          .addUserOption((o) =>
-            o.setName('wer').setDescription('Die betroffene Person.').setRequired(true)
-          )
-          .addRoleOption((o) =>
-            o.setName('von').setDescription('Die alte Rolle.').setRequired(true)
-          )
-          .addRoleOption((o) =>
-            o.setName('zu').setDescription('Die neue Rolle.').setRequired(true)
-          )
-          .addStringOption((o) =>
-            o.setName('grund').setDescription('Der Grund für den Uprank.').setRequired(true)
-          )
-      )
-    )
-
-    .addSubcommand((sub) =>
-      signatureOptions(
-        sub
-          .setName('nebenrolle-uprank')
-          .setDescription('Erstellt einen Uprank für eine Nebenrolle.')
-          .addUserOption((o) =>
-            o.setName('wer').setDescription('Die betroffene Person.').setRequired(true)
-          )
-          .addRoleOption((o) =>
-            o.setName('auf').setDescription('Die neue Nebenrolle.').setRequired(true)
-          )
-          .addStringOption((o) =>
-            o.setName('grund').setDescription('Der Grund für den Uprank.').setRequired(true)
-          )
-      )
-    )
-
-    .addSubcommand((sub) =>
-      signatureOptions(
-        sub
-          .setName('downrank')
-          .setDescription('Erstellt einen Downrank-Eintrag.')
-          .addUserOption((o) =>
-            o.setName('wer').setDescription('Die betroffene Person.').setRequired(true)
-          )
-          .addRoleOption((o) =>
-            o.setName('von').setDescription('Die alte Rolle.').setRequired(true)
-          )
-          .addRoleOption((o) =>
-            o.setName('zu').setDescription('Die neue Rolle.').setRequired(true)
-          )
-          .addStringOption((o) =>
-            o.setName('grund').setDescription('Der Grund für den Downrank.').setRequired(true)
-          )
-      )
-    )
-
-    .addSubcommand((sub) =>
-      signatureOptions(
-        sub
-          .setName('teamkick')
-          .setDescription('Erstellt einen Teamkick-Eintrag.')
-          .addUserOption((o) =>
-            o.setName('wer').setDescription('Die betroffene Person.').setRequired(true)
-          )
-          .addRoleOption((o) =>
-            o.setName('von').setDescription('Die Rolle, die entfernt werden soll.').setRequired(true)
-          )
-          .addStringOption((o) =>
-            o.setName('grund').setDescription('Der Grund für den Teamkick.').setRequired(true)
-          )
-      )
-    ),
-
-  async execute(interaction, runtime) {
-    const subcommand = interaction.options.getSubcommand();
-    return sendUpdate(interaction, runtime, subcommand);
-  }
-};
+export default [
+  createTeamUpdateCommand('temp-teamwarn', 'Erstellt eine temporäre Teamwarnung.', (builder) => builder
+    .addUserOption((o) => o.setName('wer').setDescription('Die betroffene Person.').setRequired(true))
+    .addStringOption((o) => o.setName('grund').setDescription('Der Grund der Teamwarnung.').setRequired(true))
+    .addStringOption((o) => o.setName('dauer').setDescription('Die Dauer der Warnung.').setRequired(true))),
+  createTeamUpdateCommand('teamwarn', 'Erstellt eine normale Teamwarnung.', (builder) => builder
+    .addUserOption((o) => o.setName('wer').setDescription('Die betroffene Person.').setRequired(true))
+    .addStringOption((o) => o.setName('grund').setDescription('Der Grund der Teamwarnung.').setRequired(true))),
+  createTeamUpdateCommand('neuer-teamler', 'Erstellt einen Eintrag für einen neuen Teamler.', (builder) => builder
+    .addUserOption((o) => o.setName('wer').setDescription('Die betroffene Person.').setRequired(true))
+    .addRoleOption((o) => o.setName('zu').setDescription('Die Zielrolle.').setRequired(true))
+    .addStringOption((o) => o.setName('grund').setDescription('Der Grund für den Eintrag.').setRequired(true))),
+  createTeamUpdateCommand('uprank', 'Erstellt einen Uprank-Eintrag.', (builder) => builder
+    .addUserOption((o) => o.setName('wer').setDescription('Die betroffene Person.').setRequired(true))
+    .addRoleOption((o) => o.setName('von').setDescription('Die alte Rolle.').setRequired(true))
+    .addRoleOption((o) => o.setName('zu').setDescription('Die neue Rolle.').setRequired(true))
+    .addStringOption((o) => o.setName('grund').setDescription('Der Grund für den Uprank.').setRequired(true))),
+  createTeamUpdateCommand('nebenrolle-uprank', 'Erstellt einen Uprank für eine Nebenrolle.', (builder) => builder
+    .addUserOption((o) => o.setName('wer').setDescription('Die betroffene Person.').setRequired(true))
+    .addRoleOption((o) => o.setName('auf').setDescription('Die neue Nebenrolle.').setRequired(true))
+    .addStringOption((o) => o.setName('grund').setDescription('Der Grund für den Uprank.').setRequired(true))),
+  createTeamUpdateCommand('downrank', 'Erstellt einen Downrank-Eintrag.', (builder) => builder
+    .addUserOption((o) => o.setName('wer').setDescription('Die betroffene Person.').setRequired(true))
+    .addRoleOption((o) => o.setName('von').setDescription('Die alte Rolle.').setRequired(true))
+    .addRoleOption((o) => o.setName('zu').setDescription('Die neue Rolle.').setRequired(true))
+    .addStringOption((o) => o.setName('grund').setDescription('Der Grund für den Downrank.').setRequired(true))),
+  createTeamUpdateCommand('teamkick', 'Erstellt einen Teamkick-Eintrag.', (builder) => builder
+    .addUserOption((o) => o.setName('wer').setDescription('Die betroffene Person.').setRequired(true))
+    .addRoleOption((o) => o.setName('von').setDescription('Die Teamrolle.').setRequired(true))
+    .addStringOption((o) => o.setName('grund').setDescription('Der Grund für den Teamkick.').setRequired(true)))
+];
