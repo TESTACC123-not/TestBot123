@@ -121,9 +121,9 @@ async function findChannel(client, channelId) {
  */
 export async function postRpTransition(client, runtime, state) {
   const ss = runtime.config.serverStatus || {};
-  const rpChannelId = runtime.config.rpControl?.channelId || ss.rpChannelId;
+  const rpChannelId = runtime.config.rpControl?.announcementChannelId || ss.rpChannelId;
   if (!rpChannelId) {
-    logger.warn('Server-Status: rpControl.channelId ist nicht in der config.json gesetzt - RP-Wechsel wird nicht gepostet.');
+    logger.warn('Server-Status: rpControl.announcementChannelId ist nicht in der config.json gesetzt - RP-Wechsel wird nicht gepostet.');
     return;
   }
 
