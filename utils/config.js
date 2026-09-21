@@ -437,7 +437,12 @@ export function loadConfig(baseDir = process.cwd()) {
         config.teamUpdate?.teamPingRoleId ??
         config.teamUpdate?.warnPingRoleId ??
         '',
-      warnRoleIds: normalizeArray(config.teamUpdate?.warnRoleIds)
+      warnRoleIds: normalizeArray(config.teamUpdate?.warnRoleIds),
+      // Nur diese Rollen dürfen Team-Update-Commands verwenden.
+      // Administratoren und „Server verwalten“ dürfen immer.
+      allowedRoleIds: normalizeArray(config.teamUpdate?.allowedRoleIds),
+      // Diese Rollen können über kein Team-Update als Ziel- oder Nebenrolle vergeben werden.
+      excludedRoleIds: normalizeArray(config.teamUpdate?.excludedRoleIds)
     },
 
     // Team-Ping-Panel: Buttons, die eine bestimmte Team-Rolle pingen.
