@@ -2,6 +2,7 @@ import { logger } from '../utils/logger.js';
 import { registerSlashCommands } from '../utils/loader.js';
 import { syncWaitingRooms } from '../utils/waitingRooms.js';
 import { expireBewerbungRejectRoles } from '../utils/bewerbung.js';
+import { publishRpControlPanel } from '../utils/rpControl.js';
 import {
   expireStaleSupportCases,
   refreshAllPanels,
@@ -43,6 +44,7 @@ export default {
     await runStep('Abgelaufene Abmeldungen synchronisieren', () => syncExpiredAbsences(client, runtime));
     await runStep('Automatische Trainer-Zuweisungen synchronisieren', () => syncAutomaticTrainerAssignments(client, runtime));
     await runStep('Panels posten/aktualisieren (Verify, On-Duty, Fly, Team-Liste, ...)', () => refreshAllPanels(client, runtime));
+    await runStep('RP-Steuerungs-Panel posten/aktualisieren', () => publishRpControlPanel(client, runtime));
     await runStep('Abgelaufene Bewerbungs-Ablehnungsrollen entfernen', () => expireBewerbungRejectRoles(client, runtime));
 
     try {
