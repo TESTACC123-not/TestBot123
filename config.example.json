@@ -160,6 +160,7 @@
   "rpControl": {
     "panelChannelId": "FESTER_KANAL_NUR_FUER_DAS_RP_PANEL",
     "announcementChannelId": "FESTER_KANAL_NUR_FUER_RP_START_STOP_MELDUNGEN",
+    "pingRoleId": "EIGENE_ROLLE_DIE_NUR_BEI_RP_START_GEPINGT_WIRD",
     "allowedRoleIds": []
   },
 
