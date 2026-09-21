@@ -183,9 +183,11 @@
   },
 
   "teamUpdate": {
-    "channelId": "",
-    "teamPingRoleId": "",
-    "warnRoleIds": []
+    "channelId": "FESTER_KANAL_FUER_TEAM_UPDATES",
+    "teamPingRoleId": "ROLLE_DIE_BEI_JEDEM_EINTRAG_GEPINGT_WIRD",
+    "warnRoleIds": [],
+    "allowedRoleIds": ["ROLLE_DIE_TEAM_UPDATES_NUTZEN_DARF"],
+    "excludedRoleIds": ["GESCHUETZTE_ROLLE_DIE_NIE_VERGEBEN_WIRD"]
   },
 
   "teamPings": {
