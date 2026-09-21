@@ -55,37 +55,58 @@ export function buildRpControlPanelPayload(config = {}) {
 
 export function buildRpAnnouncementPayload(state, config = {}) {
   const isLive = state === 'live';
-  const roleId = config.serverStatus?.pingRoleId ?? '';
+  // Eigene RP-Ping-Rolle; alte serverStatus.pingRoleId bleibt als Fallback erhalten.
+  const roleId = config.rpControl?.pingRoleId ?? config.serverStatus?.pingRoleId ?? '';
   const serverCode = config.gameServerCode ?? '';
-  const container = new ContainerBuilder()
-    .setAccentColor(isLive ? 0x2ecc71 : 0xe74c3c);
+  const accentColor = isLive ? 0x57f287 : 0xed4245;
+  const statusEmoji = isLive ? '🟢' : '🔴';
+  const statusTitle = isLive ? 'ROLEPLAY IST GESTARTET' : 'ROLEPLAY IST BEENDET';
+  const statusText = isLive
+    ? 'Eine öffentliche Roleplay-Sitzung ist jetzt verfügbar.'
+    : 'Derzeit findet keine Roleplay-Sitzung statt.';
+  const highlightText = isLive
+    ? 'Komm vorbei, erlebe Geschichten und werde Teil von EchoRP. ✨'
+    : 'Wir sehen uns bei der nächsten Roleplay-Sitzung. ✨';
 
+  const container = new ContainerBuilder().setAccentColor(accentColor);
+
+  // Die RP-Rolle steht bewusst außerhalb des Textes, damit Discord den Ping sauber ausführt.
   if (isLive && roleId) {
-    container.addTextDisplayComponents(new TextDisplayBuilder().setContent('<@&' + roleId + '>'));
+    container.addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(`<@&${roleId}>`)
+    );
   }
 
   container
     .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(isLive ? '**🟢 Das RP hat begonnen!**' : '**🔴 Das RP ist beendet!**'),
-      new TextDisplayBuilder().setContent(
-        isLive
-          ? 'Es findet eine **öffentliche Roleplay-Sitzung** statt.'
-          : 'Es findet **keine Roleplay-Sitzung** statt.'
-      ),
-      new TextDisplayBuilder().setContent('**Servercode:** ' + codeLabel(serverCode)),
-      new TextDisplayBuilder().setContent(
-        isLive
-          ? 'Wir freuen uns, dich begrüßen zu dürfen! 👋'
-          : 'Komm gerne bei der **nächsten Roleplay-Sitzung** vorbei! 🧡'
-      )
+      new TextDisplayBuilder().setContent(`# ${statusEmoji} ${statusTitle}`),
+      new TextDisplayBuilder().setContent(`> ${statusText}`)
     )
     .addSeparatorComponents(buildDivider())
-    .addTextDisplayComponents(new TextDisplayBuilder().setContent('**━━━━━━━━ EchoRP ━━━━━━━━**'));
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `### 🎮 Servercode\n\`${serverCode || 'Nicht konfiguriert'}\``
+      ),
+      new TextDisplayBuilder().setContent(`✨ ${highlightText}`)
+    )
+    .addSeparatorComponents(buildDivider())
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        isLive
+          ? '-# EchoRP • Dein Roleplay, deine Geschichte'
+          : '-# EchoRP • Bis gleich im nächsten RP'
+      )
+    );
 
-  const payload = { flags: MessageFlags.IsComponentsV2, components: [container] };
+  const payload = {
+    flags: MessageFlags.IsComponentsV2,
+    components: [container]
+  };
+
   if (isLive && roleId) {
-    payload.allowedMentions = { parse: [], roles: [roleId] };
+    payload.allowedMentions = { parse: [], roles: [roleId], users: [] };
   }
+
   return payload;
 }
 
