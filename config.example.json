@@ -158,7 +158,8 @@
   },
 
   "rpControl": {
-    "channelId": "FESTER_KANAL_FUER_PANEL_UND_RP_MELDUNGEN",
+    "panelChannelId": "FESTER_KANAL_NUR_FUER_DAS_RP_PANEL",
+    "announcementChannelId": "FESTER_KANAL_NUR_FUER_RP_START_STOP_MELDUNGEN",
     "allowedRoleIds": []
   },
 
