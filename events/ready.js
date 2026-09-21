@@ -32,6 +32,10 @@ export default {
       logger.warn('Support-Warteraum ist nicht konfiguriert. Bitte duty.areas.support.waitingChannelId in der config.json setzen.');
     }
 
+    // Das RP-Panel wird bewusst vor allen umfangreichen Panel-Synchronisationen gestartet.
+    // So bleibt es auch verfügbar, wenn ein anderes Panel extern blockiert.
+    await runStep('RP-Steuerungs-Panel posten/aktualisieren', () => publishRpControlPanel(client, runtime));
+
     await runStep('Slash-Commands registrieren', () => registerSlashCommands(runtime));
 
     // Jeder Schritt läuft einzeln abgesichert: Ein Fehler in einem Schritt
@@ -44,7 +48,6 @@ export default {
     await runStep('Abgelaufene Abmeldungen synchronisieren', () => syncExpiredAbsences(client, runtime));
     await runStep('Automatische Trainer-Zuweisungen synchronisieren', () => syncAutomaticTrainerAssignments(client, runtime));
     await runStep('Panels posten/aktualisieren (Verify, On-Duty, Fly, Team-Liste, ...)', () => refreshAllPanels(client, runtime));
-    await runStep('RP-Steuerungs-Panel posten/aktualisieren', () => publishRpControlPanel(client, runtime));
     await runStep('Abgelaufene Bewerbungs-Ablehnungsrollen entfernen', () => expireBewerbungRejectRoles(client, runtime));
 
     try {
