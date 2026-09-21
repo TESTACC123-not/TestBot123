@@ -31,7 +31,7 @@ async function handleRpControl(interaction, runtime, state) {
     });
   } catch (error) {
     await interaction.editReply({
-      content: '❌ Die RP-Ankündigung konnte nicht gepostet werden. Prüfe serverStatus.rpChannelId und die Bot-Berechtigungen.'
+      content: '❌ Die RP-Ankündigung konnte nicht gepostet werden. Prüfe rpControl.announcementChannelId und die Bot-Berechtigungen.'
     });
   }
 }
