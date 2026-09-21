@@ -323,6 +323,7 @@ export function loadConfig(baseDir = process.cwd()) {
 
     // Fester Kanal für das RP-Steuerungs-Panel mit Start- und Stop-Button.
     rpControl: {
+      // In diesem einen Kanal stehen das Panel UND alle RP-Start-/Stop-Meldungen.
       channelId: config.rpControl?.channelId ?? '',
       // Optional: Diese Rollen dürfen die Buttons verwenden.
       // Administratoren und Mitglieder mit „Server verwalten“ dürfen immer.
