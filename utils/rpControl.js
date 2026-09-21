@@ -91,6 +91,8 @@ export function buildRpAnnouncementPayload(state, config = {}) {
 
 export async function publishRpControlPanel(client, runtime) {
   const channelId = runtime.config.rpControl?.panelChannelId;
+  logger.info(`RP-Steuerung: Panel-Start. Konfigurierter Kanal: ${channelId || 'nicht gesetzt'}.`);
+
   if (!channelId) {
     logger.warn('RP-Steuerung: rpControl.panelChannelId ist nicht in der config.json gesetzt.');
     return null;
@@ -105,13 +107,22 @@ export async function publishRpControlPanel(client, runtime) {
     return null;
   }
 
+  logger.info(`RP-Steuerung: Panel-Kanal gefunden: #${channel.name} (${channel.id}).`);
+
   const payload = buildRpControlPanelPayload(runtime.config);
   const stored = runtime.db.getPanelMessage(CONTROL_PANEL_KEY);
+  logger.info(
+    stored?.message_id
+      ? `RP-Steuerung: Gespeicherte Panel-Nachricht gefunden: ${stored.message_id}.`
+      : 'RP-Steuerung: Keine gespeicherte Panel-Nachricht – neue Nachricht wird erstellt.'
+  );
+
   if (stored?.message_id) {
     const message = await channel.messages.fetch(stored.message_id).catch(() => null);
     if (message) {
       try {
         await message.edit(payload);
+        logger.info(`RP-Steuerung: Vorhandenes Panel erfolgreich aktualisiert: ${message.id}.`);
         return message;
       } catch (error) {
         logger.warn('RP-Steuerung: Bestehendes Panel konnte nicht aktualisiert werden.', error?.message ?? error);
@@ -122,6 +133,7 @@ export async function publishRpControlPanel(client, runtime) {
   try {
     const sent = await channel.send(payload);
     runtime.db.upsertPanelMessage(CONTROL_PANEL_KEY, runtime.config.guildId, channel.id, sent.id);
+    logger.info(`RP-Steuerung: Neues Panel erfolgreich gesendet: ${sent.id} in #${channel.name}.`);
     return sent;
   } catch (error) {
     logger.error(
