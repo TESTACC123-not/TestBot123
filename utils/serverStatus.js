@@ -121,12 +121,13 @@ async function findChannel(client, channelId) {
  */
 export async function postRpTransition(client, runtime, state) {
   const ss = runtime.config.serverStatus || {};
-  if (!ss.rpChannelId) {
-    logger.warn('Server-Status: rpChannelId ist nicht in der config.json gesetzt - RP-Wechsel wird nicht gepostet.');
+  const rpChannelId = runtime.config.rpControl?.channelId || ss.rpChannelId;
+  if (!rpChannelId) {
+    logger.warn('Server-Status: rpControl.channelId ist nicht in der config.json gesetzt - RP-Wechsel wird nicht gepostet.');
     return;
   }
 
-  const channel = await findChannel(client, ss.rpChannelId);
+  const channel = await findChannel(client, rpChannelId);
   if (!channel?.isTextBased()) {
     logger.warn('Server-Status: RP-Kanal konnte nicht gefunden werden.');
     return;
@@ -144,7 +145,7 @@ export async function postRpTransition(client, runtime, state) {
   }
 
   const sent = await channel.send(payload);
-  runtime.db.upsertPanelMessage(RP_MESSAGE_KEY, runtime.config.guildId, ss.rpChannelId, sent.id);
+  runtime.db.upsertPanelMessage(RP_MESSAGE_KEY, runtime.config.guildId, rpChannelId, sent.id);
 }
 
 /**
