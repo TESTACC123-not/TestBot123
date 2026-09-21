@@ -90,9 +90,9 @@ export function buildRpAnnouncementPayload(state, config = {}) {
 }
 
 export async function publishRpControlPanel(client, runtime) {
-  const channelId = runtime.config.rpControl?.channelId;
+  const channelId = runtime.config.rpControl?.panelChannelId;
   if (!channelId) {
-    logger.warn('RP-Steuerung: rpControl.channelId ist nicht in der config.json gesetzt.');
+    logger.warn('RP-Steuerung: rpControl.panelChannelId ist nicht in der config.json gesetzt.');
     return null;
   }
 
@@ -118,10 +118,10 @@ export async function publishRpControlPanel(client, runtime) {
 }
 
 export async function postRpControlAnnouncement(client, runtime, state) {
-  const channelId = runtime.config.rpControl?.channelId;
+  const channelId = runtime.config.rpControl?.announcementChannelId;
   const channel = await client.channels.fetch(channelId).catch(() => null);
   if (!channel?.isTextBased()) {
-    throw new Error('rpControl.channelId ist nicht korrekt konfiguriert.');
+    throw new Error('rpControl.announcementChannelId ist nicht korrekt konfiguriert.');
   }
 
   return channel.send(buildRpAnnouncementPayload(state, runtime.config));
