@@ -321,6 +321,14 @@ export function loadConfig(baseDir = process.cwd()) {
       playerCap: Math.max(1, Number(config.serverStatus?.playerCap) || 50)
     },
 
+    // Fester Kanal für das RP-Steuerungs-Panel mit Start- und Stop-Button.
+    rpControl: {
+      channelId: config.rpControl?.channelId ?? '',
+      // Optional: Diese Rollen dürfen die Buttons verwenden.
+      // Administratoren und Mitglieder mit „Server verwalten“ dürfen immer.
+      allowedRoleIds: normalizeArray(config.rpControl?.allowedRoleIds)
+    },
+
     // ------------------------------------------------------------------------
     //  REAKTIONS-LEADERBOARD  (✅ / :white_check_mark:)
     // ------------------------------------------------------------------------
