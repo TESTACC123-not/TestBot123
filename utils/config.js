@@ -78,6 +78,14 @@ function normalizeArray(value) {
   return [];
 }
 
+// IDs dürfen als Array, einzelne ID oder kommagetrennte Liste eingetragen werden.
+function normalizeIdArray(value) {
+  return normalizeArray(value)
+    .flatMap((entry) => String(entry).split(','))
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+}
+
 // Wandelt die Team-Ping-Buttons in ein sauberes Array um.
 // Unterstützt einfache Strings "ROLLE_ID" und Objekte { label, emoji, roleId, waitingRoomType }.
 // waitingRoomType verknüpft den Button mit einem Dienst-Bereich (z. B. "highTeam" oder "leitung")
@@ -329,7 +337,7 @@ export function loadConfig(baseDir = process.cwd()) {
       announcementChannelId: config.rpControl?.announcementChannelId ?? config.serverStatus?.rpChannelId ?? '',
       // Optional: Diese Rollen dürfen die Buttons verwenden.
       // Administratoren und Mitglieder mit „Server verwalten“ dürfen immer.
-      allowedRoleIds: normalizeArray(config.rpControl?.allowedRoleIds)
+      allowedRoleIds: normalizeIdArray(config.rpControl?.allowedRoleIds)
     },
 
     // ------------------------------------------------------------------------
@@ -440,9 +448,9 @@ export function loadConfig(baseDir = process.cwd()) {
       warnRoleIds: normalizeArray(config.teamUpdate?.warnRoleIds),
       // Nur diese Rollen dürfen Team-Update-Commands verwenden.
       // Administratoren und „Server verwalten“ dürfen immer.
-      allowedRoleIds: normalizeArray(config.teamUpdate?.allowedRoleIds),
+      allowedRoleIds: normalizeIdArray(config.teamUpdate?.allowedRoleIds),
       // Diese Rollen können über kein Team-Update als Ziel- oder Nebenrolle vergeben werden.
-      excludedRoleIds: normalizeArray(config.teamUpdate?.excludedRoleIds)
+      excludedRoleIds: normalizeIdArray(config.teamUpdate?.excludedRoleIds)
     },
 
     // Team-Ping-Panel: Buttons, die eine bestimmte Team-Rolle pingen.
