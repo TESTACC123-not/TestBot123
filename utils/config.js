@@ -335,6 +335,8 @@ export function loadConfig(baseDir = process.cwd()) {
       panelChannelId: config.rpControl?.panelChannelId ?? config.rpControl?.channelId ?? '',
       // Enthält ausschließlich die RP-Start-/Stop-Ankündigungen.
       announcementChannelId: config.rpControl?.announcementChannelId ?? config.serverStatus?.rpChannelId ?? '',
+      // Eigene Rolle, die beim RP-Start gepingt wird. Leer = serverStatus.pingRoleId.
+      pingRoleId: String(config.rpControl?.pingRoleId ?? '').trim(),
       // Optional: Diese Rollen dürfen die Buttons verwenden.
       // Administratoren und Mitglieder mit „Server verwalten“ dürfen immer.
       allowedRoleIds: normalizeIdArray(config.rpControl?.allowedRoleIds)
