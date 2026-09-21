@@ -157,6 +157,11 @@
     "offlineThreshold": 5
   },
 
+  "rpControl": {
+    "channelId": "FESTER_KANAL_FUER_RP_STEUERUNG",
+    "allowedRoleIds": []
+  },
+
   "serverStatus": {
     "rpChannelId": "",
     "statusChannelId": "",
