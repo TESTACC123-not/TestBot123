@@ -158,7 +158,7 @@
   },
 
   "rpControl": {
-    "channelId": "FESTER_KANAL_FUER_RP_STEUERUNG",
+    "channelId": "FESTER_KANAL_FUER_PANEL_UND_RP_MELDUNGEN",
     "allowedRoleIds": []
   },
 
