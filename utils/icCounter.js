@@ -280,6 +280,9 @@ export async function startIcCounterLoop(client, runtime) {
     clearInterval(runtime.icCounter.timer);
   }
 
+  // Ein Bot-Neustart bzw. ein neuer Zyklus benötigt eine frische Meldung.
+  // So kann kein alter Datenbankeintrag den Button dauerhaft sperren.
+  clearIcState(runtime.db, runtime.config.guildId);
   await updateIcStatusPanel(client, runtime);
   await sendIcPing(client, runtime);
 
@@ -288,7 +291,12 @@ export async function startIcCounterLoop(client, runtime) {
 
   runtime.icCounter.timer = setInterval(async () => {
     try {
+      // Jede Runde ist eine neue Abfrage. Erst nach einer neuen Eingabe
+      // wird der Button wieder deaktiviert.
+      clearIcState(runtime.db, runtime.config.guildId);
+      await updateIcStatusPanel(client, runtime);
       await sendIcPing(client, runtime);
+      logger.info('IC-Counter: Neuer Melde-Zyklus gestartet.');
     } catch (error) {
       logger.error('IC-Counter: Ping-Zyklus fehlgeschlagen.', error);
     }
