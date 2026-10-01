@@ -657,7 +657,20 @@ async function openSupportCaseForMember(client, runtime, member) {
     return storedCase;
   }
 
-  return ensureSupportCaseMessage(client, runtime, storedCase);
+  const resolvedCase = await ensureSupportCaseMessage(client, runtime, storedCase);
+
+  // Supportfälle werden direkt nach Betreten des Warteraums in den konfigurierten
+  // Bearbeitungsraum verschoben. Eine ungültige/fehlende Kanal-ID wird geloggt.
+  const activeChannelId = runtime.config.duty?.areas?.support?.activeChannelId;
+  if (typeof activeChannelId === 'string' && /^\d{10,25}$/.test(activeChannelId.trim())) {
+    await member.voice.setChannel(activeChannelId).catch((error) => {
+      logger.warn(`Supportfall ${storedCase.case_id}: Sofort-Verschieben nach ${activeChannelId} fehlgeschlagen.`, error?.message ?? error);
+    });
+  } else {
+    logger.warn('Supportfall: duty.areas.support.activeChannelId fehlt oder ist keine gültige Discord-Kanal-ID. Der Benutzer bleibt im Warteraum.');
+  }
+
+  return resolvedCase;
 }
 
 async function ensureSupportCaseMessage(client, runtime, supportCase) {
