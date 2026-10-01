@@ -264,12 +264,17 @@ export async function syncWaitingRooms(client, runtime) {
 
   for (const { key: typeKey } of getWaitingRoomAreas(runtime)) {
     const roomConfig = getWaitingRoomConfig(runtime, typeKey);
-    if (!roomConfig?.waitingChannelId) {
+    if (!isValidChannelId(roomConfig?.waitingChannelId)) {
+      logger.warn(`Wartebereich ${typeKey}: waitingChannelId fehlt oder ist ungültig. Bitte eine echte Discord-Voice-Kanal-ID eintragen.`);
       continue;
+    }
+    if (!roomConfig?.caseChannelId) {
+      logger.warn(`Wartebereich ${typeKey}: caseChannelId fehlt – es kann keine Anfrage-Nachricht gesendet werden.`);
     }
 
     const room = await guild.channels.fetch(roomConfig.waitingChannelId).catch(() => null);
     if (!room || !room.isVoiceBased?.()) {
+      logger.warn(`Wartebereich ${typeKey}: Warteraum ${roomConfig.waitingChannelId} wurde nicht gefunden oder ist kein Voice-Kanal.`);
       continue;
     }
 
@@ -319,8 +324,18 @@ async function handleWaitingTake(interaction, runtime, type, requestId) {
   await refreshWaitingRequestMessage(interaction, runtime, updatedRequest, type);
 
   const member = await interaction.guild.members.fetch(updatedRequest.user_id).catch(() => null);
-  if (member && roomConfig?.activeChannelId) {
-    await moveMemberToChannel(member, roomConfig.activeChannelId);
+  const handler = await interaction.guild.members.fetch(interaction.user.id).catch(() => null);
+  // Der aktuelle Voice-Kanal des Bearbeiters ist der beste Fallback, falls kein
+  // separater Bearbeitungsraum konfiguriert wurde.
+  const configuredTarget = isValidChannelId(roomConfig?.activeChannelId)
+    ? roomConfig.activeChannelId.trim()
+    : '';
+  const targetChannelId = handler?.voice?.channelId || configuredTarget;
+
+  if (member?.voice?.channelId && targetChannelId) {
+    await moveMemberToChannel(member, targetChannelId);
+  } else if (!targetChannelId) {
+    logger.warn(`Wartebereich ${type}: Kein Bearbeitungsraum gesetzt und der Bearbeiter sitzt in keinem Voice-Kanal. Verschieben nicht möglich.`);
   }
 
   await interaction.editReply({ content: `Du hast das ${WAITING_ROOM_TYPES[type]?.label ?? type}-Anliegen übernommen.` });
