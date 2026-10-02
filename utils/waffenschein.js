@@ -144,7 +144,7 @@ export function buildWaffenscheinTicketPayload({ ownerId, typeKey, type, bankAcc
     `6. Gib oben den Empfänger **@${bankAccount}** ein und drücke **Okay**.`,
     '7. Wähle den richtigen Betrag aus und bestätige die Überweisung.',
     '8. Sende hier einen Screenshot des Zahlungsbelegs. Unter Windows: **Windows + Shift + S**. Bitte den **gesamten Bildschirm** aufnehmen.'
-  ].join('\\n');
+  ].join('\n');
 
   const container = new ContainerBuilder()
     .setAccentColor(status === 'accepted' ? 0x2ecc71 : status === 'rejected' ? 0xe74c3c : 0xe67e22)
