@@ -54,11 +54,11 @@ export function buildReactionLeaderboardPayload(entries = []) {
   const container = new ContainerBuilder()
     .setAccentColor(0x2ecc71)
     .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent('**✅ White-Check-Mark Leaderboard**'),
+      new TextDisplayBuilder().setContent('**🎙️ D-Funk-Kontroll-Leaderboard**'),
       new TextDisplayBuilder().setContent(
         entries.length
-          ? 'Rangliste der Mitglieder mit den meisten :white_check_mark:-Reaktionen.'
-          : 'Noch keine :white_check_mark:-Reaktionen gezählt.'
+          ? 'Rangliste der Mitglieder mit den meisten D-Funk-Kontroll-Reaktionen – das verwendete Emoji ist egal.'
+          : 'Noch keine D-Funk-Kontrollen gezählt.'
       )
     )
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small));
@@ -72,7 +72,7 @@ export function buildReactionLeaderboardPayload(entries = []) {
     });
     container.addTextDisplayComponents(new TextDisplayBuilder().setContent(lines.join('\n')));
   } else {
-    container.addTextDisplayComponents(new TextDisplayBuilder().setContent('Reagiere im Zielkanal mit ✅, um im Leaderboard zu erscheinen.'));
+    container.addTextDisplayComponents(new TextDisplayBuilder().setContent('Reagiere im Zielkanal mit einem beliebigen Emoji, um im Leaderboard zu erscheinen.'));
   }
 
   container
@@ -105,15 +105,15 @@ export async function publishReactionLeaderboard(client, runtime) {
       const message = await channel.messages.fetch(stored.message_id).catch(() => null);
       if (message) {
         await message.edit(payload);
-        return { ok: true, content: `✅ White-Check-Mark-Leaderboard wurde in ${channel} aktualisiert.` };
+        return { ok: true, content: `✅ D-Funk-Kontroll-Leaderboard wurde in ${channel} aktualisiert.` };
       }
     }
 
     const sent = await channel.send(payload);
     runtime.db.upsertPanelMessage(PANEL_KEY, runtime.config.guildId, channel.id, sent.id);
-    return { ok: true, content: `✅ White-Check-Mark-Leaderboard wurde in ${channel} gepostet.` };
+    return { ok: true, content: `✅ D-Funk-Kontroll-Leaderboard wurde in ${channel} gepostet.` };
   } catch (error) {
-    logger.warn('White-Check-Mark-Leaderboard konnte nicht aktualisiert werden.', error);
-    return { ok: false, content: '❌ Das White-Check-Mark-Leaderboard konnte nicht aktualisiert werden. Bitte die Bot-Berechtigungen prüfen.' };
+    logger.warn('D-Funk-Kontroll-Leaderboard konnte nicht aktualisiert werden.', error);
+    return { ok: false, content: '❌ Das D-Funk-Kontroll-Leaderboard konnte nicht aktualisiert werden. Bitte die Bot-Berechtigungen prüfen.' };
   }
 }
