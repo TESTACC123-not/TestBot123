@@ -170,12 +170,12 @@ export function buildSupportCasePayload(caseRecord, options = {}) {
     : null;
 
   const statusText = caseRecord.status === 'closed'
-    ? 'Geschlossen'
+    ? '✅ Geschlossen'
     : caseRecord.status === 'taken'
-      ? 'Übernommen'
+      ? '🟡 Übernommen'
       : caseRecord.status === 'expired'
-        ? 'Abgelaufen'
-        : 'Offen';
+        ? '⚪ Abgelaufen'
+        : '🔵 Offen';
 
   const fields = [
     { name: 'Benutzer', value: `<@${caseRecord.user_id}>`, inline: true },
@@ -213,8 +213,8 @@ export function buildSupportCasePayload(caseRecord, options = {}) {
 
   container
     .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(`**Supportfall #${caseRecord.case_id.slice(0, 8)}**`),
-      new TextDisplayBuilder().setContent('Ein Supportfall wurde automatisch erstellt und kann nun bearbeitet werden.')
+      new TextDisplayBuilder().setContent(`🎫 **Supportfall #${caseRecord.case_id.slice(0, 8)}**`),
+      new TextDisplayBuilder().setContent('Ein Supportfall wurde erstellt. Übernimm ihn, wenn du ihn bearbeiten möchtest.')
     )
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small))
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(fieldsToText(fields)))
@@ -263,9 +263,9 @@ export function buildSupportLeaderboardPayload(rows, guild) {
   const container = new ContainerBuilder()
     .setAccentColor(0x8e44ad)
     .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent('**Support-Leaderboard**'),
+      new TextDisplayBuilder().setContent('🏆 **Support-Leaderboard**'),
       new TextDisplayBuilder().setContent(
-        rows.length ? 'Die aktuelle Rangliste der Supporter.' : 'Noch keine abgeschlossenen Supportfälle vorhanden.'
+        rows.length ? 'Die aktivsten Supporter nach abgeschlossenen Fällen.' : 'Noch keine abgeschlossenen Supportfälle vorhanden.'
       )
     );
 
@@ -364,8 +364,8 @@ export function buildVerifyPanelPayload() {
   const container = new ContainerBuilder()
     .setAccentColor(0x5865f2)
     .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent('**Verify-System**'),
-      new TextDisplayBuilder().setContent('Neue Mitglieder können sich hier mit einem Klick verifizieren, um die Bürgerrolle zu erhalten.')
+      new TextDisplayBuilder().setContent('✅ **Verify-System**'),
+      new TextDisplayBuilder().setContent('Verifiziere dich schnell und sicher, um Zugriff auf den Echo-RP-Server zu erhalten.')
     )
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small))
     .addTextDisplayComponents(
@@ -466,7 +466,7 @@ export function buildTeamListEmbeds({ guild, config, rows, members }) {
     const container = new ContainerBuilder()
       .setAccentColor(0x3498db)
       .addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(`**📋 Teamliste ${index + 1}/${totalParts}**`)
+        new TextDisplayBuilder().setContent(`📋 **Teamliste ${index + 1}/${totalParts}**`)
       )
       .addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small))
       .addTextDisplayComponents(new TextDisplayBuilder().setContent(chunk || '*Keine Einträge vorhanden.*'))
