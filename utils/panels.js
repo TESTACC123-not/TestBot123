@@ -620,7 +620,7 @@ async function refreshTrainerAssignmentsPanel(client, runtime) {
 }
 
 async function expireStaleSupportCases(runtime) {
-  const STALE_AFTER_MS = 30 * 60_000; // 30 Minuten
+  const STALE_AFTER_MS = 5 * 60_000; // 5 Minuten
   const changed = runtime.db.expireStaleOpenSupportCases(runtime.config.guildId, STALE_AFTER_MS);
   if (changed > 0) {
     logger.info(`${changed} veraltete, nicht übernommene Supportfälle wurden automatisch als abgelaufen markiert.`);
@@ -742,6 +742,8 @@ async function ensureSupportCaseMessage(client, runtime, supportCase) {
 }
 
 async function syncWaitingRoomSupportCases(client, runtime) {
+  // Vor dem Anlegen/Übernehmen zuerst alle offenen Fälle älter als 5 Minuten ablaufen lassen.
+  await expireStaleSupportCases(runtime);
   const guild = await client.guilds.fetch(runtime.config.guildId).catch(() => null);
   if (!guild) {
     return [];
@@ -858,6 +860,7 @@ function startMaintenanceLoop(client, runtime) {
     try {
       await Promise.allSettled([
         syncExpiredAbsences(client, runtime),
+        expireStaleSupportCases(runtime),
         syncWaitingRooms(client, runtime),
         expireBewerbungRejectRoles(client, runtime)
       ]);
