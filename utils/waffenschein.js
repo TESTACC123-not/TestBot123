@@ -1,3 +1,6 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -6,6 +9,9 @@ import {
   ContainerBuilder,
   TextDisplayBuilder,
   SectionBuilder,
+  AttachmentBuilder,
+  MediaGalleryBuilder,
+  MediaGalleryItemBuilder,
   SeparatorBuilder,
   SeparatorSpacingSize,
   MessageFlags,
@@ -17,6 +23,7 @@ import { logger } from './logger.js';
 import { formatGermanDateTime } from './time.js';
 
 const TOPIC_PREFIX = 'waffenschein-ticket:';
+const transferImagePath = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'assets', 'waffenschein-ueberweisung.jpg');
 
 /* ============================================================
  * CONFIG-HELFER
@@ -134,6 +141,10 @@ export function buildWaffenscheinTicketPayload({ ownerId, typeKey, type, bankAcc
         ? '❌ **Abgelehnt** – Der Antrag wurde abgelehnt.'
         : '⏳ **Offen** – Warte auf die Bearbeitung durch das Team.';
 
+  const transferAttachment = fs.existsSync(transferImagePath)
+    ? new AttachmentBuilder(transferImagePath, { name: 'waffenschein-ueberweisung.jpg' })
+    : null;
+
   const transferTutorial = [
     '📲 **So überweist du den Betrag**',
     '1. Öffne **Emergency Hamburg**.',
@@ -163,6 +174,17 @@ export function buildWaffenscheinTicketPayload({ ownerId, typeKey, type, bankAcc
     )
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small))
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(transferTutorial))
+    .addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small));
+
+  if (transferAttachment) {
+    container.addMediaGalleryComponents(
+      new MediaGalleryBuilder().addItems(
+        new MediaGalleryItemBuilder().setURL('attachment://waffenschein-ueberweisung.jpg')
+      )
+    );
+  }
+
+  container
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`-# Waffenschein-Ticket · ${formatGermanDateTime(Date.now())}`)
@@ -174,7 +196,11 @@ export function buildWaffenscheinTicketPayload({ ownerId, typeKey, type, bankAcc
     }
   }
 
-  return { flags: MessageFlags.IsComponentsV2, components: [container] };
+  return {
+    flags: MessageFlags.IsComponentsV2,
+    components: [container],
+    files: transferAttachment ? [transferAttachment] : []
+  };
 }
 
 /* ============================================================
