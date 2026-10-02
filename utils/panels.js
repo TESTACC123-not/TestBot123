@@ -430,10 +430,10 @@ async function refreshTeamListPanel(client, runtime) {
     : Array.from(guild.members.cache.values());
 
   const stored = runtime.db.getPanelMessage('teamList#0');
-  const configuredPanel = runtime.config.panels.teamList ?? {};
+  const configuredPanel = runtime.config.panels?.teamList ?? {};\n  const configuredChannelId = configuredPanel.channelId || runtime.config.channels?.teamListChannelId || '';
   let resolvedChannelId = null;
 
-  for (const candidateId of [configuredPanel.channelId, stored?.channel_id].filter(Boolean)) {
+  for (const candidateId of [configuredChannelId, stored?.channel_id].filter(Boolean)) {
     const candidate = await guild.channels.fetch(candidateId).catch(() => null);
     if (candidate?.isTextBased?.() && !candidate.isDMBased?.()) {
       resolvedChannelId = candidate.id;
@@ -457,7 +457,7 @@ async function refreshTeamListPanel(client, runtime) {
       const createdChannel = await guild.channels.create({
         name: 'teamliste',
         type: ChannelType.GuildText,
-        parent: runtime.config.categories.teamCategoryId || undefined,
+        parent: runtime.config.categories?.teamCategoryId || undefined,
         reason: 'Automatisch erstellte Teamliste für Echo RP | VC'
       }).catch((error) => {
         logger.warn('Teamlisten-Kanal konnte nicht automatisch erstellt werden.', error?.message ?? error);
