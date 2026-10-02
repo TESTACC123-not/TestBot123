@@ -463,7 +463,10 @@ async function handleIcCounterOpen(interaction, runtime) {
 
   const state = runtime.db.getSetting ? JSON.parse(runtime.db.getSetting(`icCounter:${runtime.config.guildId}`) || 'null') : null;
   if (state?.reportedById && state?.playerCount !== undefined && state?.playerCount !== null) {
-    return replyEphemeral(interaction, `Die Spielerzahl wurde bereits von <@${state.reportedById}> gemeldet (**${state.playerCount}**). Eine erneute Eingabe ist aktuell nicht möglich.`);
+    const message = state.reportedById === interaction.user.id
+      ? `Du hast die Spielerzahl in diesem Melde-Zyklus bereits gemeldet (**${state.playerCount}**). Eine erneute Eingabe ist aktuell nicht möglich.`
+      : `Die Spielerzahl wurde bereits von <@${state.reportedById}> gemeldet (**${state.playerCount}**). Eine erneute Eingabe ist aktuell nicht möglich.`;
+    return replyEphemeral(interaction, message);
   }
 
   await interaction.showModal(buildIcCounterModal(ic));
