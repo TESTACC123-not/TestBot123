@@ -27,8 +27,8 @@ function writeLeaderboard(db, guildId, data) {
 }
 
 export function isWhiteCheckMarkReaction(reaction) {
-  const emojiName = reaction?.emoji?.name;
-  return emojiName === '✅' || emojiName === 'white_check_mark';
+  const emoji = reaction?.emoji;
+  return Boolean(emoji?.id || emoji?.name);
 }
 
 export function trackWhiteCheckMarkReaction(db, guildId, userId) {
@@ -54,7 +54,7 @@ export function buildReactionLeaderboardPayload(entries = []) {
   const container = new ContainerBuilder()
     .setAccentColor(0x2ecc71)
     .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent('**🎙️ D-Funk-Kontroll-Leaderboard**'),
+      new TextDisplayBuilder().setContent('🎙️ **D-Funk-Kontrolle · Leaderboard**'),
       new TextDisplayBuilder().setContent(
         entries.length
           ? 'Rangliste der Mitglieder mit den meisten D-Funk-Kontroll-Reaktionen – das verwendete Emoji ist egal.'
@@ -78,7 +78,7 @@ export function buildReactionLeaderboardPayload(entries = []) {
   container
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small))
     .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(`-# Leaderboard aktualisiert · ${formatGermanDateTime(Date.now())}`)
+      new TextDisplayBuilder().setContent(`-# Echo RP · D-Funk-Leaderboard · Aktualisiert ${formatGermanDateTime(Date.now())}`)
     );
 
   return { flags: MessageFlags.IsComponentsV2, components: [container] };
