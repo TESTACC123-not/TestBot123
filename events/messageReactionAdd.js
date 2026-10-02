@@ -32,7 +32,8 @@ export default {
       return;
     }
 
-    // Jede Emoji-Reaktion zählt; Unicode-, animierte und benutzerdefinierte Emojis werden akzeptiert.\n    if (!isWhiteCheckMarkReaction(reaction)) {
+    // Jede Emoji-Reaktion zählt; Unicode-, animierte und benutzerdefinierte Emojis werden akzeptiert.
+    if (!isWhiteCheckMarkReaction(reaction)) {
       return;
     }
 
