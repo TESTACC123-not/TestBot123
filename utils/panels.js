@@ -417,13 +417,23 @@ async function refreshActiveAbsencePanel(client, runtime) {
 }
 
 async function refreshTeamListPanel(client, runtime) {
-  const guild = await client.guilds.fetch(runtime.config.guildId).catch(() => null);
+  logger.info('Teamliste: Aktualisierung gestartet.');
+  const guild = await client.guilds.fetch(runtime.config.guildId).catch((error) => {
+    logger.error('Teamliste: Guild konnte nicht geladen werden.', error?.message ?? error);
+    return null;
+  });
   if (!guild) {
+    logger.warn('Teamliste: Keine Guild gefunden, Veröffentlichung abgebrochen.');
     return null;
   }
 
-  const fetchedMembers = await guild.members.fetch().catch(() => null);
-  await guild.channels.fetch().catch(() => null);
+  const fetchedMembers = await guild.members.fetch().catch((error) => {
+    logger.warn('Teamliste: Mitglieder konnten nicht vollständig geladen werden.', error?.message ?? error);
+    return null;
+  });
+  await guild.channels.fetch().catch((error) => {
+    logger.warn('Teamliste: Kanäle konnten nicht aktualisiert werden.', error?.message ?? error);
+  });
 
   const members = fetchedMembers && fetchedMembers.size
     ? Array.from(fetchedMembers.values())
@@ -431,11 +441,19 @@ async function refreshTeamListPanel(client, runtime) {
 
   const stored = runtime.db.getPanelMessage('teamList#0');
   const configuredPanel = runtime.config.panels?.teamList ?? {};
-  const configuredChannelId = configuredPanel.channelId || runtime.config.channels?.teamListChannelId || '';
+  const configuredChannelId = configuredPanel.channelId
+    || runtime.config.channels?.teamListChannelId
+    || runtime.config.teamList?.channelId
+    || runtime.config.teamListChannelId
+    || '';
+  logger.info(`Teamliste: Konfigurierter Kanal: ${configuredChannelId || '(leer)'}.`);
   let resolvedChannelId = null;
 
   for (const candidateId of [configuredChannelId, stored?.channel_id].filter(Boolean)) {
-    const candidate = await guild.channels.fetch(candidateId).catch(() => null);
+    const candidate = await guild.channels.fetch(candidateId).catch((error) => {
+      logger.warn(`Teamliste: Kanal ${candidateId} konnte nicht geladen werden.`, error?.message ?? error);
+      return null;
+    });
     if (candidate?.isTextBased?.() && !candidate.isDMBased?.()) {
       resolvedChannelId = candidate.id;
       break;
@@ -448,12 +466,12 @@ async function refreshTeamListPanel(client, runtime) {
       if (!channel?.isTextBased?.() || channel.isDMBased?.()) {
         return false;
       }
-
       return fallbackNames.has(channel.name.toLowerCase());
     });
 
     if (foundChannel) {
       resolvedChannelId = foundChannel.id;
+      logger.info(`Teamliste: Fallback-Kanal gefunden: #${foundChannel.name} (${foundChannel.id}).`);
     } else if (guild.members.me?.permissions?.has(PermissionFlagsBits.ManageChannels)) {
       const createdChannel = await guild.channels.create({
         name: 'teamliste',
@@ -467,26 +485,42 @@ async function refreshTeamListPanel(client, runtime) {
 
       if (createdChannel) {
         resolvedChannelId = createdChannel.id;
+        logger.info(`Teamliste: Neuer Kanal erstellt: #${createdChannel.name} (${createdChannel.id}).`);
       }
     }
   }
 
   if (!resolvedChannelId) {
+    logger.warn('Teamliste: Kein gültiger Textkanal gefunden. Setze panels.teamList.channelId oder channels.teamListChannelId.');
     return null;
   }
 
-  const rows = new Map(runtime.db.listRobloxNames(runtime.config.guildId).map((row) => [row.user_id, row]));
+  logger.info(`Teamliste: Zielkanal gefunden: ${resolvedChannelId}. Mitglieder geladen: ${members.length}.`);
+  let rows;
+  try {
+    rows = new Map(runtime.db.listRobloxNames(runtime.config.guildId).map((row) => [row.user_id, row]));
+  } catch (error) {
+    logger.warn('Teamliste: Roblox-Namen konnten nicht gelesen werden, Liste wird ohne Namen erstellt.', error?.message ?? error);
+    rows = new Map();
+  }
 
-  const payloads = buildTeamListEmbeds({ guild, config: runtime.config, rows, members });
-  return upsertMultiPartPanelMessages(
-    client,
-    runtime,
-    'teamList',
-    resolvedChannelId,
-    payloads
-  );
+  let payloads;
+  try {
+    payloads = buildTeamListEmbeds({ guild, config: runtime.config, rows, members });
+  } catch (error) {
+    logger.error('Teamliste: Aufbau der Nachricht fehlgeschlagen.', error);
+    return null;
+  }
+
+  logger.info(`Teamliste: ${payloads.length} Nachricht(en) werden gesendet/aktualisiert.`);
+  const result = await upsertMultiPartPanelMessages(client, runtime, 'teamList', resolvedChannelId, payloads);
+  if (!result?.length) {
+    logger.warn('Teamliste: Keine Nachricht wurde gesendet oder aktualisiert.');
+  } else {
+    logger.info(`Teamliste: ${result.length} Nachricht(en) erfolgreich gesendet/aktualisiert.`);
+  }
+  return result;
 }
-
 async function refreshTrainerDashboardPanel(client, runtime) {
   const guild = await client.guilds.fetch(runtime.config.guildId).catch(() => null);
   if (!guild) {
