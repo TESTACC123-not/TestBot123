@@ -32,14 +32,14 @@ export default {
       return;
     }
 
-    if (!isWhiteCheckMarkReaction(reaction)) {
+    // Jede Emoji-Reaktion zählt; Unicode-, animierte und benutzerdefinierte Emojis werden akzeptiert.\n    if (!isWhiteCheckMarkReaction(reaction)) {
       return;
     }
 
     trackWhiteCheckMarkReaction(activeRuntime.db, reaction.message.guildId, user.id);
 
     await publishReactionLeaderboard(reaction.client, activeRuntime).catch((error) => {
-      logger.warn('White-Check-Mark-Leaderboard konnte nach einer Reaktion nicht aktualisiert werden.', error);
+      logger.warn('Reaktions-Leaderboard konnte nach einer Reaktion nicht aktualisiert werden.', error);
     });
   }
 };
