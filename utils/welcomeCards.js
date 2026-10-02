@@ -35,7 +35,7 @@ export function buildWelcomeCard(member, template) {
   const headerSection = new SectionBuilder()
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`**${member.user.username}**`),
-      new TextDisplayBuilder().setContent('🎉 **Herzlich Willkommen auf Echo RP | VC 🇩🇪 🎙️**')
+      new TextDisplayBuilder().setContent('✨ **Willkommen bei Echo RP | VC**')
     )
     .setThumbnailAccessory(new ThumbnailBuilder({ media: { url: member.displayAvatarURL({ size: 256 }) } }));
 
@@ -46,11 +46,11 @@ export function buildWelcomeCard(member, template) {
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         [
-          `Willkommen ${member.toString()}, schön dass du da bist!`,
+          `Schön, dass du da bist, ${member.toString()}!`,
           '',
           `> ${template}`,
           '',
-          `👥 **Mitglied Nr. ${member.guild.memberCount}**`
+          `👥 **Du bist Mitglied Nr. ${member.guild.memberCount}**`
         ].join('\n')
       )
     );
@@ -65,7 +65,7 @@ export function buildWelcomeCard(member, template) {
 
   container.addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small));
   container.addTextDisplayComponents(
-    new TextDisplayBuilder().setContent(`-# Echo RP | VC · Willkommen · ${formatGermanDateTime(Date.now())}`)
+    new TextDisplayBuilder().setContent(`-# Echo RP | Willkommen · ${formatGermanDateTime(Date.now())}`)
   );
 
   return {
@@ -82,7 +82,7 @@ export function buildGoodbyeCard(member, template) {
   const headerSection = new SectionBuilder()
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`**${member.user.username}**`),
-      new TextDisplayBuilder().setContent('👋 **Auf Wiedersehen!**')
+      new TextDisplayBuilder().setContent('👋 **Danke für deine Zeit bei Echo RP**')
     )
     .setThumbnailAccessory(new ThumbnailBuilder({ media: { url: member.displayAvatarURL({ size: 256 }) } }));
 
@@ -92,7 +92,7 @@ export function buildGoodbyeCard(member, template) {
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        [`Auf Wiedersehen ${member.toString()}, wir wünschen dir alles Gute!`, '', `> ${template}`].join('\n')
+        [`${member.toString()}, wir wünschen dir alles Gute!`, '', `> ${template}`].join('\n')
       )
     );
 
@@ -106,7 +106,7 @@ export function buildGoodbyeCard(member, template) {
 
   container.addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small));
   container.addTextDisplayComponents(
-    new TextDisplayBuilder().setContent(`-# Echo RP | VC · Auf Wiedersehen · ${formatGermanDateTime(Date.now())}`)
+    new TextDisplayBuilder().setContent(`-# Echo RP | Auf Wiedersehen · ${formatGermanDateTime(Date.now())}`)
   );
 
   return {
