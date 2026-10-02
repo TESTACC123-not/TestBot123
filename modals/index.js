@@ -249,6 +249,16 @@ async function handleIcCounterModal(interaction, runtime) {
   }
 
   const count = Math.min(cap, parsed);
+  // Zweite Prüfung verhindert doppelte Meldungen bei parallel geöffneten Modals.
+  const existingRaw = runtime.db.getSetting(`icCounter:${runtime.config.guildId}`);
+  const existingState = existingRaw ? JSON.parse(existingRaw) : null;
+  if (existingState?.reportedById && existingState?.playerCount !== undefined && existingState?.playerCount !== null) {
+    const message = existingState.reportedById === interaction.user.id
+      ? `Du hast die Spielerzahl in diesem Melde-Zyklus bereits gemeldet (**${existingState.playerCount}**).`
+      : `Die Spielerzahl wurde bereits von <@${existingState.reportedById}> gemeldet (**${existingState.playerCount}**).`;
+    return replyEphemeral(interaction, message);
+  }
+
   const state = {
     playerCount: count,
     reportedById: interaction.user.id,
