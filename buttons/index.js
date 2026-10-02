@@ -174,6 +174,12 @@ async function handleSupportTake(interaction, runtime, caseId) {
   }
 
   const supportCase = runtime.db.getSupportCase(caseId, runtime.config.guildId);
+  const createdAt = Number(supportCase?.created_at ?? supportCase?.createdAt ?? 0);
+  if (supportCase?.status === 'open' && createdAt > 0 && Date.now() - createdAt >= 5 * 60_000) {
+    runtime.db.expireStaleOpenSupportCases(runtime.config.guildId, 5 * 60_000);
+    return replyEphemeral(interaction, 'Dieser Supportfall ist älter als 5 Minuten und bereits abgelaufen. Bitte neu in den Warteraum gehen.');
+  }
+
   if (!supportCase || supportCase.status !== 'open') {
     return replyEphemeral(interaction, 'Dieser Supportfall wurde bereits übernommen oder geschlossen.');
   }
