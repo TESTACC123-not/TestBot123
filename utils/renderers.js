@@ -39,75 +39,88 @@ function chunkText(lines, maxLength = 3800, separator = '\n') {
   return chunks.length ? chunks : [''];
 }
 
-function buildTeamListChunks(teamRoles, members, rows, maxLength = 3400) {
-  const chunks = [];
-  let memberCount = 0;
+function normalizeTeamRoleEntries(config, guild) {
+  const configured = Array.isArray(config?.roles?.teamRoles) ? config.roles.teamRoles : [];
+  const entries = configured.map((entry, index) => {
+    const value = typeof entry === 'string' ? { id: entry } : (entry ?? {});
+    const id = value.id ?? value.roleId ?? value.roleID ?? '';
+    const guildRole = id ? guild?.roles?.cache?.get(id) : null;
+    return {
+      id,
+      label: value.label ?? value.name ?? guildRole?.name ?? 'Teamrolle',
+      order: Number.isFinite(Number(value.order)) ? Number(value.order) : index
+    };
+  }).filter((entry) => entry.id);
 
-  const memberArray = Array.isArray(members)
-    ? members
-    : Array.from(members.values());
-
-  // Jede Rolle als fertiger, abgeschlossener Textblock bauen.
-  // Die Teamnummern laufen DURCHGEHEND von 1 an: Founder = 1, danach jede
-  // weitere Person / jeder weitere Rang die nächste Nummer (nicht pro Rolle neu).
-  const roleBlocks = [];
-  let teamNumber = 0;
-
-  for (const teamRole of teamRoles) {
-    if (!teamRole?.id) {
-      continue;
-    }
-
-    const roleMembers = memberArray
-      .filter((member) => member.roles.cache.has(teamRole.id))
-      .sort((left, right) => left.displayName.localeCompare(right.displayName));
-
-    memberCount += roleMembers.length;
-
-    if (!roleMembers.length) {
-      roleBlocks.push(`### <@&${teamRole.id}> \`•\` 0\n*Keine Inhaber*`);
-      continue;
-    }
-
-    const padWidth = String(memberCount).length;
-    const lines = roleMembers.map((member) => {
-      const roblox = rows.get(member.id)?.roblox_name;
-      teamNumber += 1;
-      const number = String(teamNumber).padStart(Math.max(padWidth, 2), '0');
-      const robloxLabel = roblox ? `\`${roblox}\`` : '*kein Roblox-Name*';
-      return `\`${number}.\` <@${member.id}> — ${robloxLabel}`;
-    });
-
-    const headerLine = `### <@&${teamRole.id}> \`•\` ${roleMembers.length}`;
-
-    // Eine sehr große Rolle darf über mehrere Nachrichten laufen, aber sauber
-    // nummeriert und mit eindeutigem Fortsetzungs-Kopf.
-    if (headerLine.length + lines.join('\n').length <= maxLength) {
-      roleBlocks.push([headerLine, ...lines].join('\n'));
-    } else {
-      let block = headerLine;
-      let headerCount = 0;
-      for (const line of lines) {
-        const candidate = block ? `${block}\n${line}` : line;
-        if (candidate.length > maxLength && block) {
-          roleBlocks.push(block);
-          headerCount += 1;
-          block = `### <@&${teamRole.id}> \`•\` ${roleMembers.length} *(Fortsetzung ${headerCount})*\n${line}`;
-        } else {
-          block = candidate;
-        }
-      }
-      if (block) {
-        roleBlocks.push(block);
-      }
-    }
+  // Support-Rollen werden nur ergänzt, wenn sie ebenfalls in der Config stehen.
+  // Doppelte Rollen bleiben ausgeschlossen.
+  const configuredIds = new Set(entries.map((entry) => entry.id));
+  for (const id of [
+    ...(config?.roles?.supporterRoleIds ?? []),
+    ...(config?.support?.supporterRoleIds ?? [])
+  ]) {
+    if (!id || configuredIds.has(id)) continue;
+    const guildRole = guild?.roles?.cache?.get(id);
+    entries.push({ id, label: guildRole?.name ?? 'Support', order: entries.length });
+    configuredIds.add(id);
   }
 
-  // Ganze Rollen-Blöcke in Nachrichten packen – kein Block wird mitten in einer
-  // Rolle getrennt.
+  return entries.sort((left, right) => left.order - right.order || left.label.localeCompare(right.label));
+}
+
+function buildTeamListChunks(teamRoles, members, rows, maxLength = 3400) {
+  const chunks = [];
+  const memberArray = Array.isArray(members) ? members : Array.from(members?.values?.() ?? []);
+  const rowMap = rows instanceof Map ? rows : new Map();
+  const roleBlocks = [];
+  let teamNumber = 0;
+  let memberCount = 0;
+
+  for (const teamRole of teamRoles) {
+    const roleMembers = memberArray
+      .filter((member) => member?.roles?.cache?.has(teamRole.id))
+      .sort((left, right) => String(left.displayName ?? left.user?.username ?? '').localeCompare(String(right.displayName ?? right.user?.username ?? '')));
+
+    memberCount += roleMembers.length;
+    const headerLine = `### <@&${teamRole.id}> · **${roleMembers.length}**`;
+
+    if (!roleMembers.length) {
+      roleBlocks.push(`${headerLine}\n*Keine Mitglieder mit dieser Rolle gefunden.*`);
+      continue;
+    }
+
+    const lines = roleMembers.map((member) => {
+      teamNumber += 1;
+      const number = String(teamNumber).padStart(2, '0');
+      const roblox = rowMap.get(member.id)?.roblox_name;
+      const robloxLabel = roblox ? \`\\${String(roblox).replaceAll('\\`', '')}\\`\` : '*kein Roblox-Name*';
+      return \`\\${number}.\\` <@\\${member.id}> — \${robloxLabel}\`;
+    });
+
+    let block = [headerLine, ...lines].join('\\n');
+    if (block.length <= maxLength) {
+      roleBlocks.push(block);
+      continue;
+    }
+
+    let part = 1;
+    let current = `${headerLine} *(Teil ${part})*`;
+    for (const line of lines) {
+      const candidate = `${current}\\n${line}`;
+      if (candidate.length > maxLength && current) {
+        roleBlocks.push(current);
+        part += 1;
+        current = `${headerLine} *(Teil ${part})*\\n${line}`;
+      } else {
+        current = candidate;
+      }
+    }
+    if (current) roleBlocks.push(current);
+  }
+
   let current = '';
   for (const block of roleBlocks) {
-    const candidate = current ? `${current}\n${block}` : block;
+    const candidate = current ? `${current}\\n\\n${block}` : block;
     if (candidate.length > maxLength && current) {
       chunks.push(current);
       current = block;
@@ -115,13 +128,10 @@ function buildTeamListChunks(teamRoles, members, rows, maxLength = 3400) {
       current = candidate;
     }
   }
-  if (current) {
-    chunks.push(current);
-  }
+  if (current) chunks.push(current);
 
-  return { chunks: chunks.length ? chunks : [''], memberCount };
+  return { chunks: chunks.length ? chunks : ['*Keine Teamrollen in der config.json gefunden.*'], memberCount };
 }
-
 function header(title, subtitle = '') {
   return subtitle ? `**${title}**\n${subtitle}` : `**${title}**`;
 }
@@ -424,29 +434,15 @@ export function buildAbsencePanelPayload() {
 
 
 export function buildTeamListEmbeds({ guild, config, rows, members }) {
-  const teamRoles = config.roles.teamRoles.filter((teamRole) => teamRole?.id);
-
-  // Zusätzlich alle Support-Rollen automatisch in die Teamliste aufnehmen,
-  // damit kein Support-Mitglied fehlt, nur weil es nicht in teamRoles steht.
-  const autoTeamRoleIds = [...new Set([
-    ...(config.roles.supporterRoleIds ?? []),
-    ...(config.support?.supporterRoleIds ?? [])
-  ].filter(Boolean))];
-
-  const configuredIds = new Set(teamRoles.map((teamRole) => teamRole.id));
-  const extraTeamRoles = autoTeamRoleIds
-    .filter((id) => !configuredIds.has(id))
-    .map((id) => ({ id }));
-
-  const allRoles = [...teamRoles, ...extraTeamRoles];
+  const teamRoles = normalizeTeamRoleEntries(config, guild);
   const timestamp = formatGermanDateTime(Date.now());
 
-  if (!allRoles.length) {
+  if (!teamRoles.length) {
     const container = new ContainerBuilder()
       .setAccentColor(0x3498db)
       .addTextDisplayComponents(
         new TextDisplayBuilder().setContent('**📋 Teamliste**'),
-        new TextDisplayBuilder().setContent('Keine Teamrollen konfiguriert oder keine Mitglieder gefunden.')
+        new TextDisplayBuilder().setContent('Keine Teamrollen in der config.json eingetragen.')
       )
       .addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small))
       .addTextDisplayComponents(new TextDisplayBuilder().setContent(footerLine(`Automatische Aktualisierung aktiv · ${timestamp}`)));
@@ -454,7 +450,7 @@ export function buildTeamListEmbeds({ guild, config, rows, members }) {
     return [{ flags: MessageFlags.IsComponentsV2, components: [container] }];
   }
 
-  const { chunks, memberCount } = buildTeamListChunks(allRoles, members, rows);
+  const { chunks, memberCount } = buildTeamListChunks(teamRoles, members, rows);
   const totalParts = chunks.length;
 
   return chunks.map((chunk, index) => {
@@ -464,9 +460,11 @@ export function buildTeamListEmbeds({ guild, config, rows, members }) {
 
     const container = new ContainerBuilder()
       .setAccentColor(0x3498db)
-      .addTextDisplayComponents(new TextDisplayBuilder().setContent(`**📋 Teamliste ${index + 1}/${totalParts}**`))
+      .addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(`**📋 Teamliste ${index + 1}/${totalParts}**`)
+      )
       .addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small))
-      .addTextDisplayComponents(new TextDisplayBuilder().setContent(chunk || 'Keine Einträge in diesem Teil der Teamliste gefunden.'))
+      .addTextDisplayComponents(new TextDisplayBuilder().setContent(chunk || '*Keine Einträge vorhanden.*'))
       .addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small))
       .addTextDisplayComponents(new TextDisplayBuilder().setContent(footerLine(`${footerText} · ${timestamp}`)));
 
