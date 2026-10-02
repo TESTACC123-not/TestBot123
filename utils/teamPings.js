@@ -126,8 +126,28 @@ export async function triggerTeamPing(interaction, runtime, roleId) {
 
   const waitingRoomType = ping.waitingRoomType ?? '';
   const waitingChannelId = getWaitingRoomChannelId(runtime, waitingRoomType);
+
+  // Ohne Warteraum-Verknüpfung funktioniert der Button als echte Rollen-Umschaltung.
+  // Dadurch bleiben einfache Team-Pings mit leerem waitingRoomType nutzbar.
   if (!waitingRoomType || !waitingChannelId) {
-    return 'Dieser Button ist mit keinem Warteraum verknüpft. Trage `waitingRoomType` und den Warteraum-Kanal in der config.json ein.';
+    if (!member.roles.cache.has(roleId)) {
+      await member.roles.add(roleId).catch((error) => {
+        logger.warn('Team-Ping-Rolle konnte nicht vergeben werden.', error?.message ?? error);
+        return null;
+      });
+      if (!member.roles.cache.has(roleId)) {
+        return 'Die Team-Ping-Rolle konnte nicht vergeben werden. Prüfe Rollen-Hierarchie und Bot-Berechtigungen.';
+      }
+      return { mode: 'role', enabled: true };
+    }
+
+    await member.roles.remove(roleId).catch((error) => {
+      logger.warn('Team-Ping-Rolle konnte nicht entfernt werden.', error?.message ?? error);
+    });
+    if (member.roles.cache.has(roleId)) {
+      return 'Die Team-Ping-Rolle konnte nicht entfernt werden. Prüfe Rollen-Hierarchie und Bot-Berechtigungen.';
+    }
+    return { mode: 'role', enabled: false };
   }
 
   const isInWaitingRoom = member.voice?.channelId === waitingChannelId;
