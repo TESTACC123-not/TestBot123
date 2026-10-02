@@ -53,12 +53,25 @@ function normalizeTeamRoleEntries(config, guild) {
   }).filter((entry) => entry.id);
 
   const configuredIds = new Set(entries.map((entry) => entry.id));
-  for (const id of [...(config?.roles?.supporterRoleIds ?? []), ...(config?.support?.supporterRoleIds ?? [])]) {
+  const additionalRoles = [
+    ...(config?.roles?.supporterRoleIds ?? []),
+    ...(config?.support?.supporterRoleIds ?? []),
+    ...(config?.roles?.onDutyRoleId ? [config.roles.onDutyRoleId] : []),
+    ...Object.values(config?.duty?.areas ?? {}).map((area) => area?.roleId).filter(Boolean)
+  ];
+
+  for (const id of additionalRoles) {
     if (!id || configuredIds.has(id)) continue;
     const guildRole = guild?.roles?.cache?.get(id);
-    entries.push({ id, label: guildRole?.name ?? 'Support', order: entries.length });
+    const area = Object.values(config?.duty?.areas ?? {}).find((entry) => entry?.roleId === id);
+    entries.push({
+      id,
+      label: area?.label ?? guildRole?.name ?? 'Teamrolle',
+      order: entries.length
+    });
     configuredIds.add(id);
   }
+
   return entries.sort((left, right) => left.order - right.order || left.label.localeCompare(right.label));
 }
 
