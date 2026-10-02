@@ -510,9 +510,15 @@ async function handleTeamPing(interaction, runtime, roleId) {
 
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-  const error = await triggerTeamPing(interaction, runtime, roleId);
-  if (error) {
-    return interaction.editReply({ content: `❌ ${error}` }).catch(() => null);
+  const result = await triggerTeamPing(interaction, runtime, roleId);
+  if (typeof result === 'string') {
+    return interaction.editReply({ content: `❌ ${result}` }).catch(() => null);
+  }
+
+  if (result?.mode === 'role') {
+    return interaction.editReply({
+      content: result.enabled ? '✅ Team-Ping-Rolle aktiviert.' : '✅ Team-Ping-Rolle deaktiviert.'
+    }).catch(() => null);
   }
 
   const ping = runtime.config?.teamPings?.find((p) => p.roleId === roleId);
