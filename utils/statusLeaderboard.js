@@ -62,9 +62,9 @@ export function buildStatusLeaderboardPayload(entries = [], config = {}) {
   const container = new ContainerBuilder()
     .setAccentColor(0xf1c40f)
     .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent('**🏆 Status-Meldungen Leaderboard**'),
+      new TextDisplayBuilder().setContent('📊 **Status-Meldungen · Leaderboard**'),
       new TextDisplayBuilder().setContent(
-        'Rangliste der Mitglieder, die den Server-Status am häufigsten gemeldet haben.'
+        'Die aktivsten Mitglieder beim Melden der aktuellen Spielerzahl.'
       )
     )
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small));
@@ -86,7 +86,7 @@ export function buildStatusLeaderboardPayload(entries = [], config = {}) {
   container
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small))
     .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(`-# Echo RP VC · Leaderboard aktualisiert · ${formatGermanDateTime(Date.now())}`)
+      new TextDisplayBuilder().setContent(`-# Echo RP · Status-Leaderboard · Aktualisiert ${formatGermanDateTime(Date.now())}`)
     );
 
   return { flags: MessageFlags.IsComponentsV2, components: [container] };
