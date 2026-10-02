@@ -430,7 +430,8 @@ async function refreshTeamListPanel(client, runtime) {
     : Array.from(guild.members.cache.values());
 
   const stored = runtime.db.getPanelMessage('teamList#0');
-  const configuredPanel = runtime.config.panels?.teamList ?? {};\n  const configuredChannelId = configuredPanel.channelId || runtime.config.channels?.teamListChannelId || '';
+  const configuredPanel = runtime.config.panels?.teamList ?? {};
+  const configuredChannelId = configuredPanel.channelId || runtime.config.channels?.teamListChannelId || '';
   let resolvedChannelId = null;
 
   for (const candidateId of [configuredChannelId, stored?.channel_id].filter(Boolean)) {
