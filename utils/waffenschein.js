@@ -134,6 +134,18 @@ export function buildWaffenscheinTicketPayload({ ownerId, typeKey, type, bankAcc
         ? '❌ **Abgelehnt** – Der Antrag wurde abgelehnt.'
         : '⏳ **Offen** – Warte auf die Bearbeitung durch das Team.';
 
+  const transferTutorial = [
+    '📲 **So überweist du den Betrag**',
+    '1. Öffne **Emergency Hamburg**.',
+    '2. Öffne dein Inventar mit der Taste **C**.',
+    '3. Wähle dein **Handy** aus.',
+    '4. Öffne die **Bank-App**.',
+    '5. Wähle **Geld senden**.',
+    `6. Gib oben den Empfänger **@${bankAccount}** ein und drücke **Okay**.`,
+    '7. Wähle den richtigen Betrag aus und bestätige die Überweisung.',
+    '8. Sende hier einen Screenshot des Zahlungsbelegs. Unter Windows: **Windows + Shift + S**. Bitte den **gesamten Bildschirm** aufnehmen.'
+  ].join('\\n');
+
   const container = new ContainerBuilder()
     .setAccentColor(status === 'accepted' ? 0x2ecc71 : status === 'rejected' ? 0xe74c3c : 0xe67e22)
     .addTextDisplayComponents(
@@ -149,6 +161,8 @@ export function buildWaffenscheinTicketPayload({ ownerId, typeKey, type, bankAcc
         ].join('\n')
       )
     )
+    .addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small))
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(transferTutorial))
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`-# Waffenschein-Ticket · ${formatGermanDateTime(Date.now())}`)
