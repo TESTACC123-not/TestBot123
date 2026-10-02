@@ -52,19 +52,13 @@ function normalizeTeamRoleEntries(config, guild) {
     };
   }).filter((entry) => entry.id);
 
-  // Support-Rollen werden nur ergänzt, wenn sie ebenfalls in der Config stehen.
-  // Doppelte Rollen bleiben ausgeschlossen.
   const configuredIds = new Set(entries.map((entry) => entry.id));
-  for (const id of [
-    ...(config?.roles?.supporterRoleIds ?? []),
-    ...(config?.support?.supporterRoleIds ?? [])
-  ]) {
+  for (const id of [...(config?.roles?.supporterRoleIds ?? []), ...(config?.support?.supporterRoleIds ?? [])]) {
     if (!id || configuredIds.has(id)) continue;
     const guildRole = guild?.roles?.cache?.get(id);
     entries.push({ id, label: guildRole?.name ?? 'Support', order: entries.length });
     configuredIds.add(id);
   }
-
   return entries.sort((left, right) => left.order - right.order || left.label.localeCompare(right.label));
 }
 
@@ -80,12 +74,11 @@ function buildTeamListChunks(teamRoles, members, rows, maxLength = 3400) {
     const roleMembers = memberArray
       .filter((member) => member?.roles?.cache?.has(teamRole.id))
       .sort((left, right) => String(left.displayName ?? left.user?.username ?? '').localeCompare(String(right.displayName ?? right.user?.username ?? '')));
-
     memberCount += roleMembers.length;
-    const headerLine = `### <@&${teamRole.id}> · **${roleMembers.length}**`;
+    const headerLine = '### <@&' + teamRole.id + '> · **' + roleMembers.length + '**';
 
     if (!roleMembers.length) {
-      roleBlocks.push(`${headerLine}\n*Keine Mitglieder mit dieser Rolle gefunden.*`);
+      roleBlocks.push(headerLine + '\n*Keine Mitglieder mit dieser Rolle gefunden.*');
       continue;
     }
 
@@ -93,24 +86,24 @@ function buildTeamListChunks(teamRoles, members, rows, maxLength = 3400) {
       teamNumber += 1;
       const number = String(teamNumber).padStart(2, '0');
       const roblox = rowMap.get(member.id)?.roblox_name;
-      const robloxLabel = roblox ? \`\\${String(roblox).replaceAll('\\`', '')}\\`\` : '*kein Roblox-Name*';
-      return \`\\${number}.\\` <@\\${member.id}> — \${robloxLabel}\`;
+      const robloxLabel = roblox ? '`' + String(roblox).replaceAll('`', '') + '`' : '*kein Roblox-Name*';
+      return '`' + number + '.` <@' + member.id + '> — ' + robloxLabel;
     });
 
-    let block = [headerLine, ...lines].join('\\n');
+    const block = [headerLine, ...lines].join('\n');
     if (block.length <= maxLength) {
       roleBlocks.push(block);
       continue;
     }
 
     let part = 1;
-    let current = `${headerLine} *(Teil ${part})*`;
+    let current = headerLine + ' *(Teil ' + part + ')*';
     for (const line of lines) {
-      const candidate = `${current}\\n${line}`;
+      const candidate = current + '\n' + line;
       if (candidate.length > maxLength && current) {
         roleBlocks.push(current);
         part += 1;
-        current = `${headerLine} *(Teil ${part})*\\n${line}`;
+        current = headerLine + ' *(Teil ' + part + ')*\n' + line;
       } else {
         current = candidate;
       }
@@ -120,7 +113,7 @@ function buildTeamListChunks(teamRoles, members, rows, maxLength = 3400) {
 
   let current = '';
   for (const block of roleBlocks) {
-    const candidate = current ? `${current}\\n\\n${block}` : block;
+    const candidate = current ? current + '\n\n' + block : block;
     if (candidate.length > maxLength && current) {
       chunks.push(current);
       current = block;
@@ -129,7 +122,6 @@ function buildTeamListChunks(teamRoles, members, rows, maxLength = 3400) {
     }
   }
   if (current) chunks.push(current);
-
   return { chunks: chunks.length ? chunks : ['*Keine Teamrollen in der config.json gefunden.*'], memberCount };
 }
 function header(title, subtitle = '') {
